@@ -25,7 +25,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <org.springframework.boot.version>2.0.1.RELEASE</org.springframework.boot.version>
     <leveldb.version>0.12</leveldb.version>
     <slf4j.version>1.7.1</slf4j.version>
