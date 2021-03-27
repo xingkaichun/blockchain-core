@@ -35,7 +35,7 @@
     <netty-all.version>4.1.49.Final</netty-all.version>
     <sqldroid.version>1.0.3</sqldroid.version>
     <bitcoinj.version>0.15.8</bitcoinj.version>
-    <guava.version>28.0-jre</guava.version>
+    <guava.version>29.0-jre</guava.version>
     <mybatis.spring.version>2.0.1</mybatis.spring.version>
   </properties>
 
