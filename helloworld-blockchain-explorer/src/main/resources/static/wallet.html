@@ -43,8 +43,8 @@
             <div class="panel-heading">☺钱包☺&nbsp;&nbsp;
                 <span id="balance" class="f6">总余额</span>&nbsp;&nbsp;
                 <button type="button" class="btn btn-primary" onclick="increase()">添加账户到钱包</button>&nbsp;&nbsp;
-                <button type="button" class="btn btn-primary" onclick="createAndSave()">创建新账户(新账户添加到钱包)</button>&nbsp;&nbsp;
-                <button type="button" class="btn btn-primary" onclick="create()">创建新账户(新账户不添加到钱包)</button>&nbsp;&nbsp;
+                <button type="button" class="btn btn-primary" onclick="createAndSave()" data-toggle="modal" data-target="#myModal">创建新账户(新账户添加到钱包)</button>&nbsp;&nbsp;
+                <button type="button" class="btn btn-primary" onclick="create()" data-toggle="modal" data-target="#myModal2">创建新账户(新账户不添加到钱包)</button>&nbsp;&nbsp;
                 <button type="button" class="btn btn-primary" onclick="window.open('./pay.html')">支付</button>
             </div>
             <!-- Table -->
@@ -53,6 +53,50 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- 模态框 -->
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-hidden="true">×
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">
+                            提示: 请在您信任的站点生成账户！你创建的数字货币账号与密码已经保存本网站了！
+                        </h4>
+                    </div>
+                    <div class="modal-body" id="modal-text1"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default"
+                                data-dismiss="modal" onclick="reload()">关闭
+                        </button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+
+        <!-- 模态框 -->
+        <div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-hidden="true">×
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel2">
+                            提示: 请在您信任的站点生成账户！
+                        </h4>
+                    </div>
+                    <div class="modal-body" id="modal-text2"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default"
+                                data-dismiss="modal" onclick="reload()">关闭
+                        </button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
 
         <script>
             const obj = {}
@@ -120,10 +164,7 @@
                     data:`{}`
                 })
                 var account = data.result.account;
-                var content = '<h2 class="red">提示: 请在您信任的站点生成账户！</h2>' +
-                                 '<div><span>账号(区块链领域学名:地址)</span>&nbsp;&nbsp;'+account.address+'</div>' +
-                                 '<div><span>密码(区块链领域学名:私钥)</span>&nbsp;&nbsp;'+account.privateKey+'</div>' ;
-                layer.alert(content);
+                $("#modal-text2").text("账号(区块链领域学名:地址)"+account.address+"密码(区块链领域学名:私钥)"+account.privateKey);
             }
 
             async function createAndSave(){
@@ -132,10 +173,11 @@
                     data:`{}`
                 })
                 var account = data.result.account;
-                var content = '<h2 class="red">提示: 请在您信任的站点生成账户！你创建的数字货币账号与密码已经保存本网站了！</h2>' +
-                                 '<div><span>账号(区块链领域学名:地址)</span>&nbsp;&nbsp;'+account.address+'</div>' +
-                                 '<div><span>密码(区块链领域学名:私钥)</span>&nbsp;&nbsp;'+account.privateKey+'</div>' ;
-                layer.alert(content,function(){location.reload();});
+                $("#modal-text1").text("账号(区块链领域学名:地址)"+account.address+"密码(区块链领域学名:私钥)"+account.privateKey);
+            }
+
+            async function reload(){
+                location.reload();
             }
         </script>
     </body>
