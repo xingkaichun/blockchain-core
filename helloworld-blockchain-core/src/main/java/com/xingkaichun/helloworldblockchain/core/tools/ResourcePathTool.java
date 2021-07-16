@@ -22,7 +22,7 @@ public class ResourcePathTool {
         }else{
             dataRootPath = "/opt/HelloworldBlockchainDataJava/";
         }
-        FileUtil.mkdirs(dataRootPath);
+        FileUtil.makeDirectory(dataRootPath);
         return dataRootPath;
     }
 }

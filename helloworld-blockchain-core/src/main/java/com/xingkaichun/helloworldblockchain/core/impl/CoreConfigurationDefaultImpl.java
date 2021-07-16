@@ -26,7 +26,7 @@ public class CoreConfigurationDefaultImpl extends CoreConfiguration {
     public static final long MINE_TIMESTAMP_PER_ROUND = 1000 * 10;
 
     public CoreConfigurationDefaultImpl(String corePath) {
-        FileUtil.mkdirs(corePath);
+        FileUtil.makeDirectory(corePath);
         this.corePath = corePath;
     }
 

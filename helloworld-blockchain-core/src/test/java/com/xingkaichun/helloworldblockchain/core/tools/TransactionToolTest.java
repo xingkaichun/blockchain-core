@@ -1,7 +1,7 @@
 package com.xingkaichun.helloworldblockchain.core.tools;
 
 import com.xingkaichun.helloworldblockchain.core.model.script.OperationCodeEnum;
-import com.xingkaichun.helloworldblockchain.crypto.HexUtil;
+import com.xingkaichun.helloworldblockchain.crypto.ByteUtil;
 import com.xingkaichun.helloworldblockchain.netcore.dto.*;
 import com.xingkaichun.helloworldblockchain.util.JsonUtil;
 import org.junit.Assert;
@@ -34,12 +34,12 @@ public class TransactionToolTest {
         List<TransactionOutputDto> transactionOutputDtoList = new ArrayList<>();
         TransactionOutputDto transactionOutputDto = new TransactionOutputDto();
         OutputScriptDto outputScriptDto = new OutputScriptDto();
-        outputScriptDto.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_DUP.getCode()));
-        outputScriptDto.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_HASH160.getCode()));
-        outputScriptDto.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
+        outputScriptDto.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_DUP.getCode()));
+        outputScriptDto.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_HASH160.getCode()));
+        outputScriptDto.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
         outputScriptDto.add("955c1464982a1c904b7b1029598de6ace11bd2b1");
-        outputScriptDto.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_EQUALVERIFY.getCode()));
-        outputScriptDto.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_CHECKSIG.getCode()));
+        outputScriptDto.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_EQUALVERIFY.getCode()));
+        outputScriptDto.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_CHECKSIG.getCode()));
         transactionOutputDto.setOutputScript(outputScriptDto);
         transactionOutputDto.setValue(10);
         transactionOutputDtoList.add(transactionOutputDto);
@@ -58,12 +58,12 @@ public class TransactionToolTest {
 
         TransactionOutputDto transactionOutputDto2 = new TransactionOutputDto();
         OutputScriptDto outputScriptDto2 = new OutputScriptDto();
-        outputScriptDto2.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_DUP.getCode()));
-        outputScriptDto2.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_HASH160.getCode()));
-        outputScriptDto2.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
+        outputScriptDto2.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_DUP.getCode()));
+        outputScriptDto2.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_HASH160.getCode()));
+        outputScriptDto2.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
         outputScriptDto2.add("955c1464982a1c904b7b1029598de6ace11bd2b1");
-        outputScriptDto2.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_EQUALVERIFY.getCode()));
-        outputScriptDto2.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_CHECKSIG.getCode()));
+        outputScriptDto2.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_EQUALVERIFY.getCode()));
+        outputScriptDto2.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_CHECKSIG.getCode()));
         transactionOutputDto2.setOutputScript(outputScriptDto2);
         transactionOutputDto2.setValue(20);
         transactionOutputDtoList.add(transactionOutputDto2);
@@ -85,7 +85,7 @@ public class TransactionToolTest {
         transactionInputDto.setTransactionHash("53b780303a801edbf75fe3463799547daf88ae152c06d16769218cec78b5d48e");
         transactionInputDto.setTransactionOutputIndex(0);
         InputScriptDto inputScriptDto = new InputScriptDto();
-        inputScriptDto.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
+        inputScriptDto.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
         inputScriptDto.add("955c1464982a1c904b7b1029598de6ace11bd2b1");
         transactionInputDto.setInputScript(inputScriptDto);
         transactionInputDtoList.add(transactionInputDto);
@@ -97,12 +97,12 @@ public class TransactionToolTest {
         List<TransactionOutputDto> transactionOutputDtoList = new ArrayList<>();
         TransactionOutputDto transactionOutputDto = new TransactionOutputDto();
         OutputScriptDto outputScriptDto = new OutputScriptDto();
-        outputScriptDto.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_DUP.getCode()));
-        outputScriptDto.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_HASH160.getCode()));
-        outputScriptDto.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
+        outputScriptDto.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_DUP.getCode()));
+        outputScriptDto.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_HASH160.getCode()));
+        outputScriptDto.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
         outputScriptDto.add("955c1464982a1c904b7b1029598de6ace11bd2b1");
-        outputScriptDto.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_EQUALVERIFY.getCode()));
-        outputScriptDto.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_CHECKSIG.getCode()));
+        outputScriptDto.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_EQUALVERIFY.getCode()));
+        outputScriptDto.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_CHECKSIG.getCode()));
         transactionOutputDto.setOutputScript(outputScriptDto);
         transactionOutputDto.setValue(10);
         transactionOutputDtoList.add(transactionOutputDto);
@@ -115,7 +115,7 @@ public class TransactionToolTest {
         transactionInputDto2.setTransactionHash("53b780303a801edbf75fe3463799547daf88ae152c06d16769218cec78b5d48e");
         transactionInputDto2.setTransactionOutputIndex(0);
         InputScriptDto inputScriptDto2 = new InputScriptDto();
-        inputScriptDto2.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
+        inputScriptDto2.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
         inputScriptDto2.add("955c1464982a1c904b7b1029598de6ace11bd2b1");
         transactionInputDto2.setInputScript(inputScriptDto2);
         transactionInputDtoList.add(transactionInputDto2);
@@ -125,12 +125,12 @@ public class TransactionToolTest {
 
         TransactionOutputDto transactionOutputDto2 = new TransactionOutputDto();
         OutputScriptDto outputScriptDto2 = new OutputScriptDto();
-        outputScriptDto2.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_DUP.getCode()));
-        outputScriptDto2.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_HASH160.getCode()));
-        outputScriptDto2.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
+        outputScriptDto2.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_DUP.getCode()));
+        outputScriptDto2.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_HASH160.getCode()));
+        outputScriptDto2.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
         outputScriptDto2.add("955c1464982a1c904b7b1029598de6ace11bd2b1");
-        outputScriptDto2.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_EQUALVERIFY.getCode()));
-        outputScriptDto2.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_CHECKSIG.getCode()));
+        outputScriptDto2.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_EQUALVERIFY.getCode()));
+        outputScriptDto2.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_CHECKSIG.getCode()));
         transactionOutputDto2.setOutputScript(outputScriptDto2);
         transactionOutputDto2.setValue(20);
         transactionOutputDtoList.add(transactionOutputDto2);

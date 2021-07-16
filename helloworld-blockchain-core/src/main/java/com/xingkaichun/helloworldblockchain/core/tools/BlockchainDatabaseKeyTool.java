@@ -78,7 +78,7 @@ public class BlockchainDatabaseKeyTool {
         return ByteUtil.stringToUtf8Bytes(stringKey);
     }
     public static byte[] buildBlockHeightToBlockKey(long blockHeight) {
-        String stringKey = BLOCK_HEIGHT_TO_BLOCK_PREFIX_FLAG + ByteUtil.long8ToHexString8(blockHeight) + END_FLAG;
+        String stringKey = BLOCK_HEIGHT_TO_BLOCK_PREFIX_FLAG + StringUtil.valueOfUint64(blockHeight) + END_FLAG;
         return ByteUtil.stringToUtf8Bytes(stringKey);
     }
     public static byte[] buildBlockHashToBlockHeightKey(String blockHash) {
@@ -90,7 +90,7 @@ public class BlockchainDatabaseKeyTool {
         return ByteUtil.stringToUtf8Bytes(stringKey);
     }
     public static byte[] buildTransactionOutputHeightToTransactionOutputKey(long transactionOutputHeight) {
-        String stringKey = TRANSACTION_OUTPUT_HEIGHT_TO_TRANSACTION_OUTPUT_PREFIX_FLAG + ByteUtil.long8ToHexString8(transactionOutputHeight) + END_FLAG;
+        String stringKey = TRANSACTION_OUTPUT_HEIGHT_TO_TRANSACTION_OUTPUT_PREFIX_FLAG + StringUtil.valueOfUint64(transactionOutputHeight) + END_FLAG;
         return ByteUtil.stringToUtf8Bytes(stringKey);
     }
     public static byte[] buildTransactionOutputIdToTransactionOutputHeightKey(String transactionHash,long transactionOutputIndex) {
@@ -145,7 +145,7 @@ public class BlockchainDatabaseKeyTool {
     }
 
     public static String buildTransactionOutputId(String transactionHash,long transactionOutputIndex) {
-        String transactionOutputId = StringUtil.concat3(transactionHash, VERTICAL_LINE_FLAG, ByteUtil.long8ToHexString8(transactionOutputIndex));
+        String transactionOutputId = StringUtil.concatenate3(transactionHash, VERTICAL_LINE_FLAG, StringUtil.valueOfUint64(transactionOutputIndex));
         return transactionOutputId;
     }
 }

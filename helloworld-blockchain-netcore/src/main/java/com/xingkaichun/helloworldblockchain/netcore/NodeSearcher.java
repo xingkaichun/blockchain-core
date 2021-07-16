@@ -6,9 +6,8 @@ import com.xingkaichun.helloworldblockchain.netcore.model.Node;
 import com.xingkaichun.helloworldblockchain.netcore.service.NetCoreConfiguration;
 import com.xingkaichun.helloworldblockchain.netcore.service.NodeService;
 import com.xingkaichun.helloworldblockchain.util.LogUtil;
-import com.xingkaichun.helloworldblockchain.util.SleepUtil;
-import com.xingkaichun.helloworldblockchain.util.StringUtil;
 import com.xingkaichun.helloworldblockchain.util.SystemUtil;
+import com.xingkaichun.helloworldblockchain.util.ThreadUtil;
 
 import java.util.List;
 
@@ -41,7 +40,7 @@ public class NodeSearcher {
                     if(netCoreConfiguration.isAutoSearchNode()){
                         searchNodes();
                     }
-                    SleepUtil.sleep(netCoreConfiguration.getSearchNodeTimeInterval());
+                    ThreadUtil.millisecondSleep(netCoreConfiguration.getSearchNodeTimeInterval());
                 } catch (Exception e) {
                     SystemUtil.errorExit("在区块链网络中搜索新的节点出现异常",e);
                 }
@@ -72,7 +71,7 @@ public class NodeSearcher {
                     }
                 }
             }catch (Exception e){
-                LogUtil.error(StringUtil.format("通过节点%s搜索新的节点出现异常",node.getIp()),e);
+                LogUtil.error("通过节点["+node.getIp()+"]搜索新的节点出现异常",e);
             }
         }
     }
@@ -89,13 +88,13 @@ public class NodeSearcher {
             PingResponse pingResponse = new BlockchainNodeClientImpl(node.getIp()).pingNode(new PingRequest());
             if(pingResponse == null){
                 nodeService.deleteNode(node.getIp());
-                LogUtil.debug(String.format("删除节点[%s]，原因是无法联通。",node.getIp()));
+                LogUtil.debug("删除节点["+node.getIp()+"]，原因是无法联通。");
                 return;
             }
             Node nodeModel = new Node();
             nodeModel.setIp(node.getIp());
             nodeService.addNode(nodeModel);
-            LogUtil.debug(String.format("自动发现节点[%s]，节点已加入节点数据库。",node.getIp()));
+            LogUtil.debug("自动机制发现节点["+node.getIp()+"]，节点已加入节点数据库。");
         }
     }
 }

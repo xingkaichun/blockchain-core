@@ -3,13 +3,12 @@ package com.xingkaichun.helloworldblockchain.netcore.server;
 import com.xingkaichun.helloworldblockchain.core.BlockchainCore;
 import com.xingkaichun.helloworldblockchain.core.UnconfirmedTransactionDatabase;
 import com.xingkaichun.helloworldblockchain.core.model.Block;
-import com.xingkaichun.helloworldblockchain.core.tools.Dto2ModelTool;
 import com.xingkaichun.helloworldblockchain.core.tools.Model2DtoTool;
 import com.xingkaichun.helloworldblockchain.netcore.dto.*;
 import com.xingkaichun.helloworldblockchain.netcore.model.Node;
 import com.xingkaichun.helloworldblockchain.netcore.service.NetCoreConfiguration;
 import com.xingkaichun.helloworldblockchain.netcore.service.NodeService;
-import com.xingkaichun.helloworldblockchain.setting.Setting;
+import com.xingkaichun.helloworldblockchain.setting.BlockSetting;
 import com.xingkaichun.helloworldblockchain.util.LogUtil;
 
 import java.util.ArrayList;
@@ -42,7 +41,7 @@ public class HttpServerHandlerResolver {
                 Node node = new Node();
                 node.setIp(requestIp);
                 nodeService.addNode(node);
-                LogUtil.debug(String.format("有节点[%s:%d]尝试Ping本地节点，将来路节点加入节点数据库。",requestIp, Setting.NetworkSetting.PORT));
+                LogUtil.debug("发现节点["+requestIp+"]在Ping本地节点，已将发现的节点放入了节点数据库。");
             }
             PingResponse response = new PingResponse();
             return response;
@@ -151,7 +150,7 @@ public class HttpServerHandlerResolver {
     public GetUnconfirmedTransactionsResponse getUnconfirmedTransactions(GetUnconfirmedTransactionsRequest request) {
         try {
             UnconfirmedTransactionDatabase unconfirmedTransactionDatabase = blockchainCore.getUnconfirmedTransactionDatabase();
-            List<TransactionDto> transactions = unconfirmedTransactionDatabase.selectTransactions(1,Setting.BlockSetting.BLOCK_MAX_TRANSACTION_COUNT);
+            List<TransactionDto> transactions = unconfirmedTransactionDatabase.selectTransactions(1, BlockSetting.BLOCK_MAX_TRANSACTION_COUNT);
             GetUnconfirmedTransactionsResponse response = new GetUnconfirmedTransactionsResponse();
             response.setTransactions(transactions);
             return response;

@@ -1,7 +1,5 @@
 package com.xingkaichun.helloworldblockchain.crypto;
 
-import org.bouncycastle.util.Arrays;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,8 +13,7 @@ public class MerkleTreeUtil {
 
     /**
      * 计算默克尔树根
-     * https://en.bitcoin.it/wiki/Protocol_documentation#Merkle_Trees
-     * 摘抄于bitcoinj-core-0.15.8.jar!\org\bitcoinj\core\Block.java MerkleRoot()方法
+     * Ctrl+V 于 bitcoinj-core-0.15.8.jar!\org\bitcoinj\core\Block.java MerkleRoot()
      *
      * @author 邢开春 409060350@qq.com
      */
@@ -29,7 +26,7 @@ public class MerkleTreeUtil {
                 int right = Math.min(left + 1, levelSize - 1);
                 byte[] leftBytes = tree.get(levelOffset + left);
                 byte[] rightBytes = tree.get(levelOffset + right);
-                tree.add(Sha256Util.doubleDigest(Arrays.concatenate(leftBytes, rightBytes)));
+                tree.add(Sha256Util.doubleDigest(ByteUtil.concatenate(leftBytes, rightBytes)));
             }
             levelOffset += levelSize;
         }

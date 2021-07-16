@@ -23,7 +23,7 @@ public class BlockchainNetCoreFactory {
     /**
      * 创建[区块链网络版核心]实例
      */
-    public static BlockchainNetCore createBlockchainNetCore(){
+    public static BlockchainNetCore createDefaultBlockchainNetCore(){
         return createBlockchainNetCore(ResourcePathTool.getDataRootPath());
     }
 

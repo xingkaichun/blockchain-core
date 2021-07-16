@@ -187,5 +187,5 @@ public class Block implements Serializable {
         this.previousTransactionHeight = previousTransactionHeight;
     }
 
-//endregion
+    //endregion
 }

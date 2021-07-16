@@ -11,6 +11,7 @@ public class JsonUtil {
 
     private static Gson GSON = new Gson();
 
+    //TODO 泛型？？？
     public static String toJson(Object object) {
         return GSON.toJson(object);
     }

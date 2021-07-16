@@ -4,7 +4,7 @@ import com.xingkaichun.helloworldblockchain.core.CoreConfiguration;
 import com.xingkaichun.helloworldblockchain.core.UnconfirmedTransactionDatabase;
 import com.xingkaichun.helloworldblockchain.core.tools.EncodeDecodeTool;
 import com.xingkaichun.helloworldblockchain.core.tools.TransactionDtoTool;
-import com.xingkaichun.helloworldblockchain.crypto.HexUtil;
+import com.xingkaichun.helloworldblockchain.crypto.ByteUtil;
 import com.xingkaichun.helloworldblockchain.netcore.dto.TransactionDto;
 import com.xingkaichun.helloworldblockchain.util.FileUtil;
 import com.xingkaichun.helloworldblockchain.util.KvDbUtil;
@@ -64,6 +64,6 @@ public class UnconfirmedTransactionDatabaseDefaultImpl extends UnconfirmedTransa
     }
 
     private byte[] getKey(String transactionHash){
-        return HexUtil.hexStringToBytes(transactionHash);
+        return ByteUtil.hexStringToBytes(transactionHash);
     }
 }

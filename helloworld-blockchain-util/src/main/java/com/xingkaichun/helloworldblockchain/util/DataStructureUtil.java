@@ -8,8 +8,7 @@ import java.util.Set;
  *
  * @author 邢开春 409060350@qq.com
  */
-public class ListUtil {
-
+public class DataStructureUtil {
 
     public static boolean isExistDuplicateElement(List<String> list) {
         Set<String> set = new HashSet<>(list);

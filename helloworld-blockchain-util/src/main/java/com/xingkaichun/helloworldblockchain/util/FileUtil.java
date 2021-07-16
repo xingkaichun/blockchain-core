@@ -13,14 +13,28 @@ public class FileUtil {
         return new File(parent,child).getAbsolutePath();
     }
 
-    public static void mkdirs(String path) {
+    public static void makeDirectory(String path) {
         File file = new File(path);
         if(file.exists()){
             return;
         }
-        boolean mkdirs = file.mkdirs();
-        if(!mkdirs){
+        boolean isMakeDirectorySuccess = file.mkdirs();
+        if(!isMakeDirectorySuccess){
             throw new RuntimeException("create directory failed.");
+        }
+    }
+
+    public static void deleteDirectory(String path) {
+        File file = new File(path);
+        if(file.isDirectory()){
+            File[] childrenFiles = file.listFiles();
+            for (File childFile:childrenFiles){
+                deleteDirectory(childFile.getAbsolutePath());
+            }
+        }
+        boolean isDeleteDirectorySuccess = file.delete();
+        if(!isDeleteDirectorySuccess){
+            throw new RuntimeException("delete directory failed.");
         }
     }
 }

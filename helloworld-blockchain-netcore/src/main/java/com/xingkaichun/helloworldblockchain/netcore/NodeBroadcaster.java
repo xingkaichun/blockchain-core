@@ -6,9 +6,8 @@ import com.xingkaichun.helloworldblockchain.netcore.model.Node;
 import com.xingkaichun.helloworldblockchain.netcore.service.NetCoreConfiguration;
 import com.xingkaichun.helloworldblockchain.netcore.service.NodeService;
 import com.xingkaichun.helloworldblockchain.util.LogUtil;
-import com.xingkaichun.helloworldblockchain.util.SleepUtil;
-import com.xingkaichun.helloworldblockchain.util.StringUtil;
 import com.xingkaichun.helloworldblockchain.util.SystemUtil;
+import com.xingkaichun.helloworldblockchain.util.ThreadUtil;
 
 import java.util.List;
 
@@ -38,7 +37,7 @@ public class NodeBroadcaster {
             while (true){
                 try {
                     broadcastNode();
-                    SleepUtil.sleep(netCoreConfiguration.getNodeBroadcastTimeInterval());
+                    ThreadUtil.millisecondSleep(netCoreConfiguration.getNodeBroadcastTimeInterval());
                 } catch (Exception e) {
                     SystemUtil.errorExit("在区块链网络中广播自己出现异常",e);
                 }
@@ -55,7 +54,7 @@ public class NodeBroadcaster {
             try {
                 new BlockchainNodeClientImpl(node.getIp()).pingNode(new PingRequest());
             } catch (Exception e) {
-                LogUtil.error(StringUtil.format("广播自己时出现异常，无法连接节点[%s]，删除节点[%s]",node.getIp(),node.getIp()),e);
+                LogUtil.error("广播自己时，删除无法连接的节点["+node.getIp()+"]",e);
             }
         }
     }

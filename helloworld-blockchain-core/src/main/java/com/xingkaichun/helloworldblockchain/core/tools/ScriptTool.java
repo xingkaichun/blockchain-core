@@ -6,7 +6,6 @@ import com.xingkaichun.helloworldblockchain.core.model.script.OutputScript;
 import com.xingkaichun.helloworldblockchain.core.model.script.Script;
 import com.xingkaichun.helloworldblockchain.crypto.AccountUtil;
 import com.xingkaichun.helloworldblockchain.crypto.ByteUtil;
-import com.xingkaichun.helloworldblockchain.crypto.HexUtil;
 import com.xingkaichun.helloworldblockchain.netcore.dto.InputScriptDto;
 import com.xingkaichun.helloworldblockchain.netcore.dto.OutputScriptDto;
 import com.xingkaichun.helloworldblockchain.util.StringUtil;
@@ -30,16 +29,16 @@ public class ScriptTool {
         byte[] bytesScript = new byte[0];
         for(int i=0;i<script.size();i++){
             String operationCode = script.get(i);
-            byte[] bytesOperationCode = HexUtil.hexStringToBytes(operationCode);
-            if(ByteUtil.equals(OperationCodeEnum.OP_DUP.getCode(),bytesOperationCode) ||
-                    ByteUtil.equals(OperationCodeEnum.OP_HASH160.getCode(),bytesOperationCode) ||
-                    ByteUtil.equals(OperationCodeEnum.OP_EQUALVERIFY.getCode(),bytesOperationCode) ||
-                    ByteUtil.equals(OperationCodeEnum.OP_CHECKSIG.getCode(),bytesOperationCode)){
-                bytesScript = ByteUtil.concat(bytesScript, ByteUtil.concatLength(bytesOperationCode));
-            }else if(ByteUtil.equals(OperationCodeEnum.OP_PUSHDATA.getCode(),bytesOperationCode)){
+            byte[] bytesOperationCode = ByteUtil.hexStringToBytes(operationCode);
+            if(ByteUtil.isEquals(OperationCodeEnum.OP_DUP.getCode(),bytesOperationCode) ||
+                    ByteUtil.isEquals(OperationCodeEnum.OP_HASH160.getCode(),bytesOperationCode) ||
+                    ByteUtil.isEquals(OperationCodeEnum.OP_EQUALVERIFY.getCode(),bytesOperationCode) ||
+                    ByteUtil.isEquals(OperationCodeEnum.OP_CHECKSIG.getCode(),bytesOperationCode)){
+                bytesScript = ByteUtil.concatenate(bytesScript, ByteUtil.concatenateLength(bytesOperationCode));
+            }else if(ByteUtil.isEquals(OperationCodeEnum.OP_PUSHDATA.getCode(),bytesOperationCode)){
                 String operationData = script.get(++i);
-                byte[] bytesOperationData = HexUtil.hexStringToBytes(operationData);
-                bytesScript = ByteUtil.concat3(bytesScript, ByteUtil.concatLength(bytesOperationCode), ByteUtil.concatLength(bytesOperationData));
+                byte[] bytesOperationData = ByteUtil.hexStringToBytes(operationData);
+                bytesScript = ByteUtil.concatenate3(bytesScript, ByteUtil.concatenateLength(bytesOperationCode), ByteUtil.concatenateLength(bytesOperationData));
             }else {
                 throw new RuntimeException("不能识别的指令");
             }
@@ -80,25 +79,25 @@ public class ScriptTool {
         int start = 0;
         List<String> script = new ArrayList<>();
         while (start<bytesScript.length){
-            long bytesOperationCodeLength = ByteUtil.byte8ToLong8(Arrays.copyOfRange(bytesScript,start,start + ByteUtil.BYTE8_BYTE_COUNT));
+            long bytesOperationCodeLength = ByteUtil.bytesToUint64(Arrays.copyOfRange(bytesScript,start,start + ByteUtil.BYTE8_BYTE_COUNT));
             start += ByteUtil.BYTE8_BYTE_COUNT;
             byte[] bytesOperationCode = Arrays.copyOfRange(bytesScript,start, start+(int) bytesOperationCodeLength);
             start += bytesOperationCodeLength;
-            if(ByteUtil.equals(OperationCodeEnum.OP_DUP.getCode(),bytesOperationCode) ||
-                    ByteUtil.equals(OperationCodeEnum.OP_HASH160.getCode(),bytesOperationCode) ||
-                    ByteUtil.equals(OperationCodeEnum.OP_EQUALVERIFY.getCode(),bytesOperationCode) ||
-                    ByteUtil.equals(OperationCodeEnum.OP_CHECKSIG.getCode(),bytesOperationCode)){
-                String stringOperationCode = HexUtil.bytesToHexString(bytesOperationCode);
+            if(ByteUtil.isEquals(OperationCodeEnum.OP_DUP.getCode(),bytesOperationCode) ||
+                    ByteUtil.isEquals(OperationCodeEnum.OP_HASH160.getCode(),bytesOperationCode) ||
+                    ByteUtil.isEquals(OperationCodeEnum.OP_EQUALVERIFY.getCode(),bytesOperationCode) ||
+                    ByteUtil.isEquals(OperationCodeEnum.OP_CHECKSIG.getCode(),bytesOperationCode)){
+                String stringOperationCode = ByteUtil.bytesToHexString(bytesOperationCode);
                 script.add(stringOperationCode);
-            }else if(ByteUtil.equals(OperationCodeEnum.OP_PUSHDATA.getCode(),bytesOperationCode)){
-                String stringOperationCode = HexUtil.bytesToHexString(bytesOperationCode);
+            }else if(ByteUtil.isEquals(OperationCodeEnum.OP_PUSHDATA.getCode(),bytesOperationCode)){
+                String stringOperationCode = ByteUtil.bytesToHexString(bytesOperationCode);
                 script.add(stringOperationCode);
 
-                long bytesOperationDataLength = ByteUtil.byte8ToLong8(Arrays.copyOfRange(bytesScript,start,start + ByteUtil.BYTE8_BYTE_COUNT));
+                long bytesOperationDataLength = ByteUtil.bytesToUint64(Arrays.copyOfRange(bytesScript,start,start + ByteUtil.BYTE8_BYTE_COUNT));
                 start += ByteUtil.BYTE8_BYTE_COUNT;
                 byte[] bytesOperationData = Arrays.copyOfRange(bytesScript,start, start+(int) bytesOperationDataLength);
                 start += bytesOperationDataLength;
-                String stringOperationData = HexUtil.bytesToHexString(bytesOperationData);
+                String stringOperationData = ByteUtil.bytesToHexString(bytesOperationData);
                 script.add(stringOperationData);
             }else {
                 throw new RuntimeException("不能识别的指令");
@@ -118,19 +117,19 @@ public class ScriptTool {
         String stringScript = "";
         for(int i=0;i<script.size();i++){
             String operationCode = script.get(i);
-            byte[] bytesOperationCode = HexUtil.hexStringToBytes(operationCode);
-            if(ByteUtil.equals(OperationCodeEnum.OP_DUP.getCode(),bytesOperationCode)){
-                stringScript = StringUtil.concat3(stringScript,OperationCodeEnum.OP_DUP.getName(),StringUtil.BLANKSPACE);
-            }else if(ByteUtil.equals(OperationCodeEnum.OP_HASH160.getCode(),bytesOperationCode)){
-                stringScript = StringUtil.concat3(stringScript,OperationCodeEnum.OP_HASH160.getName(),StringUtil.BLANKSPACE);
-            }else if(ByteUtil.equals(OperationCodeEnum.OP_EQUALVERIFY.getCode(),bytesOperationCode)){
-                stringScript = StringUtil.concat3(stringScript,OperationCodeEnum.OP_EQUALVERIFY.getName(),StringUtil.BLANKSPACE);
-            }else if(ByteUtil.equals(OperationCodeEnum.OP_CHECKSIG.getCode(),bytesOperationCode)){
-                stringScript = StringUtil.concat3(stringScript,OperationCodeEnum.OP_CHECKSIG.getName(),StringUtil.BLANKSPACE);
-            }else if(ByteUtil.equals(OperationCodeEnum.OP_PUSHDATA.getCode(),bytesOperationCode)){
+            byte[] bytesOperationCode = ByteUtil.hexStringToBytes(operationCode);
+            if(ByteUtil.isEquals(OperationCodeEnum.OP_DUP.getCode(),bytesOperationCode)){
+                stringScript = StringUtil.concatenate3(stringScript,OperationCodeEnum.OP_DUP.getName(),StringUtil.BLANKSPACE);
+            }else if(ByteUtil.isEquals(OperationCodeEnum.OP_HASH160.getCode(),bytesOperationCode)){
+                stringScript = StringUtil.concatenate3(stringScript,OperationCodeEnum.OP_HASH160.getName(),StringUtil.BLANKSPACE);
+            }else if(ByteUtil.isEquals(OperationCodeEnum.OP_EQUALVERIFY.getCode(),bytesOperationCode)){
+                stringScript = StringUtil.concatenate3(stringScript,OperationCodeEnum.OP_EQUALVERIFY.getName(),StringUtil.BLANKSPACE);
+            }else if(ByteUtil.isEquals(OperationCodeEnum.OP_CHECKSIG.getCode(),bytesOperationCode)){
+                stringScript = StringUtil.concatenate3(stringScript,OperationCodeEnum.OP_CHECKSIG.getName(),StringUtil.BLANKSPACE);
+            }else if(ByteUtil.isEquals(OperationCodeEnum.OP_PUSHDATA.getCode(),bytesOperationCode)){
                 String operationData = script.get(++i);
-                stringScript = StringUtil.concat3(stringScript,OperationCodeEnum.OP_PUSHDATA.getName(),StringUtil.BLANKSPACE);
-                stringScript = StringUtil.concat3(stringScript,operationData,StringUtil.BLANKSPACE);
+                stringScript = StringUtil.concatenate3(stringScript,OperationCodeEnum.OP_PUSHDATA.getName(),StringUtil.BLANKSPACE);
+                stringScript = StringUtil.concatenate3(stringScript,operationData,StringUtil.BLANKSPACE);
             }else {
                 throw new RuntimeException("不能识别的指令");
             }
@@ -153,9 +152,9 @@ public class ScriptTool {
      */
     public static InputScript createPayToPublicKeyHashInputScript(String sign, String publicKey) {
         InputScript script = new InputScript();
-        script.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
+        script.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
         script.add(sign);
-        script.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
+        script.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
         script.add(publicKey);
         return script;
     }
@@ -165,13 +164,13 @@ public class ScriptTool {
      */
     public static OutputScript createPayToPublicKeyHashOutputScript(String address) {
         OutputScript script = new OutputScript();
-        script.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_DUP.getCode()));
-        script.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_HASH160.getCode()));
-        script.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
+        script.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_DUP.getCode()));
+        script.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_HASH160.getCode()));
+        script.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()));
         String publicKeyHash = AccountUtil.publicKeyHashFromAddress(address);
         script.add(publicKeyHash);
-        script.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_EQUALVERIFY.getCode()));
-        script.add(HexUtil.bytesToHexString(OperationCodeEnum.OP_CHECKSIG.getCode()));
+        script.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_EQUALVERIFY.getCode()));
+        script.add(ByteUtil.bytesToHexString(OperationCodeEnum.OP_CHECKSIG.getCode()));
         return script;
     }
 
@@ -180,18 +179,7 @@ public class ScriptTool {
      */
     public static boolean isPayToPublicKeyHashInputScript(InputScript inputScript) {
         InputScriptDto inputScriptDto = Model2DtoTool.inputScript2InputScriptDto(inputScript);
-        return isPayToPublicKeyHashInputScript(inputScriptDto);
-    }
-    public static boolean isPayToPublicKeyHashInputScript(InputScriptDto inputScriptDto) {
-        try {
-            return  inputScriptDto.size() == 4
-                    && HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()).equals(inputScriptDto.get(0))
-                    && (136 <= inputScriptDto.get(1).length() && 144 >= inputScriptDto.get(1).length())
-                    && HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()).equals(inputScriptDto.get(2))
-                    && 66 == inputScriptDto.get(3).length();
-        }catch (Exception e){
-            return false;
-        }
+        return DtoScriptTool.isPayToPublicKeyHashInputScript(inputScriptDto);
     }
 
     /**
@@ -199,20 +187,7 @@ public class ScriptTool {
      */
     public static boolean isPayToPublicKeyHashOutputScript(OutputScript outputScript) {
         OutputScriptDto outputScriptDto = Model2DtoTool.outputScript2OutputScriptDto(outputScript);
-        return isPayToPublicKeyHashOutputScript(outputScriptDto);
-    }
-    public static boolean isPayToPublicKeyHashOutputScript(OutputScriptDto outputScriptDto) {
-        try {
-            return  outputScriptDto.size() == 6
-                    && HexUtil.bytesToHexString(OperationCodeEnum.OP_DUP.getCode()).equals(outputScriptDto.get(0))
-                    && HexUtil.bytesToHexString(OperationCodeEnum.OP_HASH160.getCode()).equals(outputScriptDto.get(1))
-                    && HexUtil.bytesToHexString(OperationCodeEnum.OP_PUSHDATA.getCode()).equals(outputScriptDto.get(2))
-                    && 40 == outputScriptDto.get(3).length()
-                    && HexUtil.bytesToHexString(OperationCodeEnum.OP_EQUALVERIFY.getCode()).equals(outputScriptDto.get(4))
-                    && HexUtil.bytesToHexString(OperationCodeEnum.OP_CHECKSIG.getCode()).equals(outputScriptDto.get(5));
-        }catch (Exception e){
-            return false;
-        }
+        return DtoScriptTool.isPayToPublicKeyHashOutputScript(outputScriptDto);
     }
 
     /**

@@ -8,7 +8,10 @@ import com.xingkaichun.helloworldblockchain.netcore.dto.TransactionDto;
 import com.xingkaichun.helloworldblockchain.netcore.model.Node;
 import com.xingkaichun.helloworldblockchain.netcore.service.NetCoreConfiguration;
 import com.xingkaichun.helloworldblockchain.netcore.service.NodeService;
-import com.xingkaichun.helloworldblockchain.util.*;
+import com.xingkaichun.helloworldblockchain.util.JsonUtil;
+import com.xingkaichun.helloworldblockchain.util.LogUtil;
+import com.xingkaichun.helloworldblockchain.util.SystemUtil;
+import com.xingkaichun.helloworldblockchain.util.ThreadUtil;
 
 import java.util.List;
 
@@ -37,7 +40,7 @@ public class UnconfirmedTransactionsSearcher {
             while (true){
                 try {
                     searchUnconfirmedTransactions();
-                    SleepUtil.sleep(netCoreConfiguration.getSearchUnconfirmedTransactionsInterval());
+                    ThreadUtil.millisecondSleep(netCoreConfiguration.getSearchUnconfirmedTransactionsInterval());
                 } catch (Exception e) {
                     SystemUtil.errorExit("在区块链网络中搜寻未确认交易出现异常",e);
                 }
@@ -62,13 +65,13 @@ public class UnconfirmedTransactionsSearcher {
                             try {
                                 blockchainCore.getUnconfirmedTransactionDatabase().insertTransaction(transactionDto);
                             }catch (Exception e){
-                                LogUtil.error(StringUtil.format("交易[%s]放入交易池异常。", JsonUtil.toJson(transactionDto)),e);
+                                LogUtil.error("交易["+JsonUtil.toJson(transactionDto)+"]放入交易池异常。",e);
                             }
                         }
                     }
                 }
             }catch (Exception e){
-                LogUtil.error(StringUtil.format("搜寻节点[%s]的未确认交易出现异常。",node.getIp()),e);
+                LogUtil.error("搜寻节点["+node.getIp()+"]的未确认交易出现异常。",e);
             }
         }
     }

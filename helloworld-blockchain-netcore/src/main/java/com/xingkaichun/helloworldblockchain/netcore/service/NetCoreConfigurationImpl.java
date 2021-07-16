@@ -45,7 +45,7 @@ public class NetCoreConfigurationImpl implements NetCoreConfiguration {
     public static final long SEARCH_UNCONFIRMED_TRANSACTIONS_INTERVAL = 1000 * 60 * 2;
 
     public NetCoreConfigurationImpl(String netcorePath) {
-        FileUtil.mkdirs(netcorePath);
+        FileUtil.makeDirectory(netcorePath);
         this.netcorePath = netcorePath;
     }
 

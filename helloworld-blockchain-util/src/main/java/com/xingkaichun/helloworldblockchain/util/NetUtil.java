@@ -1,8 +1,5 @@
 package com.xingkaichun.helloworldblockchain.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -14,8 +11,6 @@ import java.nio.charset.StandardCharsets;
  * @author 邢开春 409060350@qq.com
  */
 public class NetUtil {
-
-    private static final Logger logger = LoggerFactory.getLogger(NetUtil.class);
 
     public static String get(String requestUrl, String requestBody) throws IOException {
         OutputStreamWriter out = null;
@@ -58,14 +53,14 @@ public class NetUtil {
                     out.close();
                 }
             } catch (IOException e) {
-                logger.error("close io failed.",e);
+                LogUtil.error("close io failed.",e);
             }
             try {
                 if (br != null) {
                     br.close();
                 }
             } catch (IOException e) {
-                logger.error("close io failed.",e);
+                LogUtil.error("close io failed.",e);
             }
         }
     }

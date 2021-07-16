@@ -6,9 +6,8 @@ import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionIn
 import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionOutput;
 import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionType;
 import com.xingkaichun.helloworldblockchain.netcore.dto.BlockDto;
-import com.xingkaichun.helloworldblockchain.setting.Setting;
-import com.xingkaichun.helloworldblockchain.util.ListUtil;
-import com.xingkaichun.helloworldblockchain.util.NumberUtil;
+import com.xingkaichun.helloworldblockchain.setting.GenesisBlockSetting;
+import com.xingkaichun.helloworldblockchain.util.DataStructureUtil;
 import com.xingkaichun.helloworldblockchain.util.StringUtil;
 import com.xingkaichun.helloworldblockchain.util.TimeUtil;
 
@@ -42,23 +41,23 @@ public class BlockTool {
      * 区块新产生的哈希是否存在重复
      */
     public static boolean isExistDuplicateNewHash(Block block) {
-        List<String> newHashList = new ArrayList<>();
+        List<String> newHashs = new ArrayList<>();
         String blockHash = block.getHash();
-        newHashList.add(blockHash);
+        newHashs.add(blockHash);
         List<Transaction> transactions = block.getTransactions();
         if(transactions != null){
             for(Transaction transaction : transactions){
                 String transactionHash = transaction.getTransactionHash();
-                newHashList.add(transactionHash);
+                newHashs.add(transactionHash);
             }
         }
-        return ListUtil.isExistDuplicateElement(newHashList);
+        return DataStructureUtil.isExistDuplicateElement(newHashs);
     }
     /**
      * 区块新产生的地址是否存在重复
      */
     public static boolean isExistDuplicateNewAddress(Block block) {
-        List<String> newAddressList = new ArrayList<>();
+        List<String> newAddresss = new ArrayList<>();
         List<Transaction> transactions = block.getTransactions();
         if(transactions != null){
             for(Transaction transaction : transactions){
@@ -66,18 +65,18 @@ public class BlockTool {
                 if(outputs != null){
                     for (TransactionOutput output:outputs){
                         String address = output.getAddress();
-                        newAddressList.add(address);
+                        newAddresss.add(address);
                     }
                 }
             }
         }
-        return ListUtil.isExistDuplicateElement(newAddressList);
+        return DataStructureUtil.isExistDuplicateElement(newAddresss);
     }
     /**
      * 区块中是否存在重复的[未花费交易输出]
      */
     public static boolean isExistDuplicateUtxo(Block block) {
-        List<String> utxoIdList = new ArrayList<>();
+        List<String> utxoIds = new ArrayList<>();
         List<Transaction> transactions = block.getTransactions();
         if(transactions != null) {
             for(Transaction transaction : transactions){
@@ -86,12 +85,12 @@ public class BlockTool {
                     for(TransactionInput transactionInput : inputs) {
                         TransactionOutput unspentTransactionOutput = transactionInput.getUnspentTransactionOutput();
                         String utxoId = TransactionTool.getTransactionOutputId(unspentTransactionOutput);
-                        utxoIdList.add(utxoId);
+                        utxoIds.add(utxoId);
                     }
                 }
             }
         }
-        return ListUtil.isExistDuplicateElement(utxoIdList);
+        return DataStructureUtil.isExistDuplicateElement(utxoIds);
     }
 
     /**
@@ -99,7 +98,7 @@ public class BlockTool {
      */
     public static boolean checkPreviousBlockHash(Block previousBlock, Block currentBlock) {
         if(previousBlock == null){
-            return StringUtil.isEquals(Setting.GenesisBlockSetting.HASH,currentBlock.getPreviousHash());
+            return StringUtil.isEquals(GenesisBlockSetting.HASH,currentBlock.getPreviousHash());
         } else {
             return StringUtil.isEquals(previousBlock.getHash(),currentBlock.getPreviousHash());
         }
@@ -110,9 +109,9 @@ public class BlockTool {
      */
     public static boolean checkBlockHeight(Block previousBlock, Block currentBlock) {
         if(previousBlock == null){
-            return NumberUtil.isEquals((Setting.GenesisBlockSetting.HEIGHT +1),currentBlock.getHeight());
+            return (GenesisBlockSetting.HEIGHT +1) == currentBlock.getHeight();
         } else {
-            return NumberUtil.isEquals((previousBlock.getHeight()+1),currentBlock.getHeight());
+            return (previousBlock.getHeight()+1) == currentBlock.getHeight();
         }
     }
 
@@ -122,7 +121,7 @@ public class BlockTool {
      * 区块时间戳一定要比前一个区块的时间戳大。
      */
     public static boolean checkBlockTimestamp(Block previousBlock, Block currentBlock) {
-        if(currentBlock.getTimestamp() > TimeUtil.currentMillisecondTimestamp()){
+        if(currentBlock.getTimestamp() > TimeUtil.millisecondTimestamp()){
             return false;
         }
         if(previousBlock == null){
@@ -149,7 +148,7 @@ public class BlockTool {
         if(block1 == null || block2 == null){
             return false;
         }
-        return NumberUtil.isEquals(block1.getTimestamp(), block2.getTimestamp()) &&
+        return (block1.getTimestamp() == block2.getTimestamp()) &&
                 StringUtil.isEquals(block1.getHash(), block2.getHash()) &&
                 StringUtil.isEquals(block1.getPreviousHash(), block2.getPreviousHash()) &&
                 StringUtil.isEquals(block1.getMerkleTreeRoot(), block2.getMerkleTreeRoot()) &&
@@ -210,7 +209,7 @@ public class BlockTool {
      * 获取下一个区块的高度
      */
     public static long getNextBlockHeight(Block currentBlock) {
-        long nextBlockHeight = currentBlock==null? Setting.GenesisBlockSetting.HEIGHT+1:currentBlock.getHeight()+1;
+        long nextBlockHeight = currentBlock==null? GenesisBlockSetting.HEIGHT+1:currentBlock.getHeight()+1;
         return nextBlockHeight;
     }
 }

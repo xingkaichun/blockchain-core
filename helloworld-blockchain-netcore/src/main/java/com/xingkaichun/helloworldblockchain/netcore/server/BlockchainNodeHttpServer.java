@@ -1,6 +1,6 @@
 package com.xingkaichun.helloworldblockchain.netcore.server;
 
-import com.xingkaichun.helloworldblockchain.setting.Setting;
+import com.xingkaichun.helloworldblockchain.setting.NetworkSetting;
 import com.xingkaichun.helloworldblockchain.util.LogUtil;
 import com.xingkaichun.helloworldblockchain.util.SystemUtil;
 import io.netty.bootstrap.ServerBootstrap;
@@ -40,8 +40,8 @@ public class BlockchainNodeHttpServer {
 								.option(ChannelOption.SO_BACKLOG, 128)
 								.childOption(ChannelOption.SO_KEEPALIVE, true);
 
-						ChannelFuture f = b.bind(Setting.NetworkSetting.PORT).sync();
-						LogUtil.debug("HttpServer已启动，端口：" + Setting.NetworkSetting.PORT);
+						ChannelFuture f = b.bind(NetworkSetting.PORT).sync();
+						LogUtil.debug("HttpServer已启动，端口：" + NetworkSetting.PORT);
 						f.channel().closeFuture().sync();
 					} catch (InterruptedException e) {
 						SystemUtil.errorExit("节点服务器运行出现异常。",e);

@@ -5,12 +5,12 @@ package com.xingkaichun.helloworldblockchain.core.model.script;
  *
  * @author 邢开春 409060350@qq.com
  */
-public enum BooleanEnum {
-    FALSE(new byte[0x00]),
-    TRUE(new byte[0x01]);
+public enum BooleanCodeEnum {
+    FALSE(new byte[]{(byte)0x00}),
+    TRUE(new byte[]{(byte)0x01});
 
     private byte[] code;
-    BooleanEnum(byte[] code) {
+    BooleanCodeEnum(byte[] code) {
         this.code = code;
     }
 

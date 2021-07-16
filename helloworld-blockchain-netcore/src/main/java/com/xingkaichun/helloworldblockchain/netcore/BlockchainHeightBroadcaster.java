@@ -6,10 +6,8 @@ import com.xingkaichun.helloworldblockchain.netcore.dto.PostBlockchainHeightRequ
 import com.xingkaichun.helloworldblockchain.netcore.model.Node;
 import com.xingkaichun.helloworldblockchain.netcore.service.NetCoreConfiguration;
 import com.xingkaichun.helloworldblockchain.netcore.service.NodeService;
-import com.xingkaichun.helloworldblockchain.util.NumberUtil;
-import com.xingkaichun.helloworldblockchain.util.SleepUtil;
-import com.xingkaichun.helloworldblockchain.util.StringUtil;
 import com.xingkaichun.helloworldblockchain.util.SystemUtil;
+import com.xingkaichun.helloworldblockchain.util.ThreadUtil;
 
 import java.util.List;
 
@@ -41,7 +39,7 @@ public class BlockchainHeightBroadcaster {
             while (true){
                 try {
                     broadcastBlockchainHeight();
-                    SleepUtil.sleep(netCoreConfiguration.getBlockchainHeightBroadcastTimeInterval());
+                    ThreadUtil.millisecondSleep(netCoreConfiguration.getBlockchainHeightBroadcastTimeInterval());
                 } catch (Exception e) {
                     SystemUtil.errorExit("在区块链网络中广播区块高度异常",e);
                 }
@@ -61,9 +59,9 @@ public class BlockchainHeightBroadcaster {
         long blockchainHeight = blockchainCore.queryBlockchainHeight();
         //按照节点的高度进行排序
         nodes.sort((Node node1, Node node2) -> {
-            if (NumberUtil.isGreatThan(node1.getBlockchainHeight(), node2.getBlockchainHeight())) {
+            if (node1.getBlockchainHeight() > node2.getBlockchainHeight()) {
                 return -1;
-            } else if (NumberUtil.isEquals(node1.getBlockchainHeight(), node2.getBlockchainHeight())) {
+            } else if (node1.getBlockchainHeight() == node2.getBlockchainHeight()) {
                 return 0;
             } else {
                 return 1;
@@ -81,7 +79,7 @@ public class BlockchainHeightBroadcaster {
         int broadcastNodeCount = 0;
         for(Node node:nodes){
             try {
-                if(NumberUtil.isLessEqualThan(blockchainHeight,node.getBlockchainHeight())){
+                if(blockchainHeight <= node.getBlockchainHeight()){
                     continue;
                 }
                 PostBlockchainHeightRequest postBlockchainHeightRequest = new PostBlockchainHeightRequest();
@@ -91,9 +89,9 @@ public class BlockchainHeightBroadcaster {
                 if(broadcastNodeCount > 50){
                     return;
                 }
-                SleepUtil.sleep(1000*10);
+                ThreadUtil.millisecondSleep(1000*10);
             }catch (Exception e){
-                SystemUtil.errorExit(StringUtil.format("广播区块高度到节点[%s]异常",node.getIp()),e);
+                SystemUtil.errorExit("广播区块高度到节点["+node.getIp()+"]异常",e);
             }
         }
     }

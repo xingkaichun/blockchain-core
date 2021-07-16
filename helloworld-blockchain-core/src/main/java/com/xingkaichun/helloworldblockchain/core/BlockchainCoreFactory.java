@@ -13,7 +13,7 @@ public class BlockchainCoreFactory {
     /**
      * 创建BlockchainCore实例
      */
-    public static BlockchainCore createBlockchainCore(){
+    public static BlockchainCore createDefaultBlockchainCore(){
         return createBlockchainCore(ResourcePathTool.getDataRootPath());
     }
 

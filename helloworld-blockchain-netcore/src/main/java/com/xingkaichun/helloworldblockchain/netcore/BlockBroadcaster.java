@@ -9,7 +9,7 @@ import com.xingkaichun.helloworldblockchain.netcore.dto.PostBlockRequest;
 import com.xingkaichun.helloworldblockchain.netcore.model.Node;
 import com.xingkaichun.helloworldblockchain.netcore.service.NetCoreConfiguration;
 import com.xingkaichun.helloworldblockchain.netcore.service.NodeService;
-import com.xingkaichun.helloworldblockchain.setting.Setting;
+import com.xingkaichun.helloworldblockchain.setting.GenesisBlockSetting;
 import com.xingkaichun.helloworldblockchain.util.*;
 
 import java.util.List;
@@ -42,7 +42,7 @@ public class BlockBroadcaster {
             while (true){
                 try {
                     broadcastBlock();
-                    SleepUtil.sleep(netCoreConfiguration.getBlockBroadcastTimeInterval());
+                    ThreadUtil.millisecondSleep(netCoreConfiguration.getBlockBroadcastTimeInterval());
                 } catch (Exception e) {
                     SystemUtil.errorExit("在区块链网络中广播自己的区块出现异常",e);
                 }
@@ -57,7 +57,7 @@ public class BlockBroadcaster {
         }
 
         long blockchainHeight = blockchainCore.queryBlockchainHeight();
-        if(NumberUtil.isLessEqualThan(blockchainHeight, Setting.GenesisBlockSetting.HEIGHT)){
+        if(blockchainHeight <= GenesisBlockSetting.HEIGHT){
             return;
         }
         Block block = blockchainCore.queryTailBlock();
@@ -65,9 +65,9 @@ public class BlockBroadcaster {
 
         //按照节点的高度进行排序
         nodes.sort((Node node1, Node node2) -> {
-            if (NumberUtil.isGreatThan(node1.getBlockchainHeight(), node2.getBlockchainHeight())) {
+            if (node1.getBlockchainHeight() > node2.getBlockchainHeight()) {
                 return -1;
-            } else if (NumberUtil.isEquals(node1.getBlockchainHeight(), node2.getBlockchainHeight())) {
+            } else if (node1.getBlockchainHeight() == node2.getBlockchainHeight()) {
                 return 0;
             } else {
                 return 1;
@@ -78,7 +78,7 @@ public class BlockBroadcaster {
         int broadcastNodeCount = 0;
         for(Node node:nodes){
             try {
-                if(NumberUtil.isLessEqualThan(blockchainHeight,node.getBlockchainHeight())){
+                if(blockchainHeight <= node.getBlockchainHeight()){
                     continue;
                 }
                 PostBlockRequest postBlockRequest = new PostBlockRequest();
@@ -88,9 +88,9 @@ public class BlockBroadcaster {
                 if(broadcastNodeCount > 50){
                     return;
                 }
-                SleepUtil.sleep(1000*2);
+                ThreadUtil.millisecondSleep(1000*2);
             }catch (Exception e){
-                LogUtil.error(StringUtil.format("广播区块到节点[%s]异常",node.getIp()),e);
+                LogUtil.error("广播区块到节点"+node.getIp()+"异常",e);
             }
         }
     }

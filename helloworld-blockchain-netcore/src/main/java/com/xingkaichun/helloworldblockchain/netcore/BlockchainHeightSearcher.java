@@ -7,9 +7,8 @@ import com.xingkaichun.helloworldblockchain.netcore.model.Node;
 import com.xingkaichun.helloworldblockchain.netcore.service.NetCoreConfiguration;
 import com.xingkaichun.helloworldblockchain.netcore.service.NodeService;
 import com.xingkaichun.helloworldblockchain.util.LogUtil;
-import com.xingkaichun.helloworldblockchain.util.SleepUtil;
-import com.xingkaichun.helloworldblockchain.util.StringUtil;
 import com.xingkaichun.helloworldblockchain.util.SystemUtil;
+import com.xingkaichun.helloworldblockchain.util.ThreadUtil;
 
 import java.util.List;
 
@@ -39,7 +38,7 @@ public class BlockchainHeightSearcher {
             while (true){
                 try {
                     searchBlockchainHeight();
-                    SleepUtil.sleep(netCoreConfiguration.getSearchBlockchainHeightTimeInterval());
+                    ThreadUtil.millisecondSleep(netCoreConfiguration.getSearchBlockchainHeightTimeInterval());
                 } catch (Exception e) {
                     SystemUtil.errorExit("在区块链网络中搜索节点的高度异常",e);
                 }
@@ -58,7 +57,7 @@ public class BlockchainHeightSearcher {
                     nodeService.updateNode(node);
                 }
             }catch (Exception e){
-                LogUtil.error(StringUtil.format("搜索节点[%s]的高度异常。",node.getIp()),e);
+                LogUtil.error("搜索节点["+node.getIp()+"]的高度异常。",e);
             }
         }
     }

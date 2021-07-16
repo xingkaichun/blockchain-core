@@ -8,8 +8,7 @@ import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionIn
 import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionOutput;
 import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionType;
 import com.xingkaichun.helloworldblockchain.crypto.ByteUtil;
-import com.xingkaichun.helloworldblockchain.crypto.HexUtil;
-import com.xingkaichun.helloworldblockchain.setting.Setting;
+import com.xingkaichun.helloworldblockchain.setting.BlockSetting;
 import com.xingkaichun.helloworldblockchain.util.LogUtil;
 
 import java.util.List;
@@ -33,8 +32,8 @@ public class StructureTool {
         }
         //校验区块中交易的数量
         long transactionCount = BlockTool.getTransactionCount(block);
-        if(transactionCount > Setting.BlockSetting.BLOCK_MAX_TRANSACTION_COUNT){
-            LogUtil.debug(String.format("区块包含交易数量是[%s]超过限制[%s]。",transactionCount, Setting.BlockSetting.BLOCK_MAX_TRANSACTION_COUNT));
+        if(transactionCount > BlockSetting.BLOCK_MAX_TRANSACTION_COUNT){
+            LogUtil.debug("区块包含的交易数量是["+transactionCount+"]，超过了限制["+ BlockSetting.BLOCK_MAX_TRANSACTION_COUNT+"]。");
             return false;
         }
         for(int i=0; i<transactions.size(); i++){
@@ -97,6 +96,7 @@ public class StructureTool {
         List<TransactionOutput> outputs = transaction.getOutputs();
         if(outputs != null){
             for (TransactionOutput transactionOutput:outputs) {
+                //TODO 只需校验是否是P2PKH输入输出脚本
                 if(!checkScriptStructure(transactionOutput.getOutputScript())){
                     return false;
                 }
@@ -110,13 +110,13 @@ public class StructureTool {
     public static boolean checkScriptStructure(Script script) {
         for(int i=0;i<script.size();i++){
             String operationCode = script.get(i);
-            byte[] bytesOperationCode = HexUtil.hexStringToBytes(operationCode);
-            if(ByteUtil.equals(OperationCodeEnum.OP_DUP.getCode(),bytesOperationCode) ||
-                    ByteUtil.equals(OperationCodeEnum.OP_HASH160.getCode(),bytesOperationCode) ||
-                    ByteUtil.equals(OperationCodeEnum.OP_EQUALVERIFY.getCode(),bytesOperationCode) ||
-                    ByteUtil.equals(OperationCodeEnum.OP_CHECKSIG.getCode(),bytesOperationCode)){
+            byte[] bytesOperationCode = ByteUtil.hexStringToBytes(operationCode);
+            if(ByteUtil.isEquals(OperationCodeEnum.OP_DUP.getCode(),bytesOperationCode) ||
+                    ByteUtil.isEquals(OperationCodeEnum.OP_HASH160.getCode(),bytesOperationCode) ||
+                    ByteUtil.isEquals(OperationCodeEnum.OP_EQUALVERIFY.getCode(),bytesOperationCode) ||
+                    ByteUtil.isEquals(OperationCodeEnum.OP_CHECKSIG.getCode(),bytesOperationCode)){
                 continue;
-            }else if(ByteUtil.equals(OperationCodeEnum.OP_PUSHDATA.getCode(),bytesOperationCode)){
+            }else if(ByteUtil.isEquals(OperationCodeEnum.OP_PUSHDATA.getCode(),bytesOperationCode)){
                 //跳过操作数
                 ++i;
                 //验证操作码后一定有操作数

@@ -15,7 +15,7 @@ import com.xingkaichun.helloworldblockchain.core.tools.SizeTool;
 import com.xingkaichun.helloworldblockchain.core.tools.TransactionDtoTool;
 import com.xingkaichun.helloworldblockchain.netcore.BlockchainNetCore;
 import com.xingkaichun.helloworldblockchain.netcore.dto.TransactionDto;
-import com.xingkaichun.helloworldblockchain.setting.Setting;
+import com.xingkaichun.helloworldblockchain.setting.GenesisBlockSetting;
 import com.xingkaichun.helloworldblockchain.util.LogUtil;
 import com.xingkaichun.helloworldblockchain.util.StringUtil;
 import com.xingkaichun.helloworldblockchain.util.TimeUtil;
@@ -148,7 +148,7 @@ public class BlockchainBrowserApplicationController {
         try {
             UnconfirmedTransactionVo unconfirmedTransactionVo = blockchainBrowserApplicationService.queryUnconfirmedTransactionByTransactionHash(request.getTransactionHash());
             if(unconfirmedTransactionVo == null){
-                return ServiceResult.createFailServiceResult(String.format("交易哈希[%s]不是未确认交易。",request.getTransactionHash()));
+                return ServiceResult.createFailServiceResult("交易哈希["+request.getTransactionHash()+"]不是未确认交易。");
             }
             QueryUnconfirmedTransactionByTransactionHashResponse response = new QueryUnconfirmedTransactionByTransactionHashResponse();
             response.setTransaction(unconfirmedTransactionVo);
@@ -197,7 +197,7 @@ public class BlockchainBrowserApplicationController {
         try {
             BlockVo blockVo = blockchainBrowserApplicationService.queryBlockViewByBlockHeight(request.getBlockHeight());
             if(blockVo == null){
-                return ServiceResult.createFailServiceResult(String.format("区块链中不存在区块高度[%d]，请检查输入高度。",request.getBlockHeight()));
+                return ServiceResult.createFailServiceResult("区块链中不存在区块高度["+request.getBlockHeight()+"]，请检查输入高度。");
             }
             QueryBlockByBlockHeightResponse response = new QueryBlockByBlockHeightResponse();
             response.setBlock(blockVo);
@@ -217,7 +217,7 @@ public class BlockchainBrowserApplicationController {
         try {
             Block block = blockchainCore.queryBlockByBlockHash(request.getBlockHash());
             if(block == null){
-                return ServiceResult.createFailServiceResult(String.format("区块链中不存在区块哈希[%s]，请检查输入哈希。",request.getBlockHash()));
+                return ServiceResult.createFailServiceResult("区块链中不存在区块哈希["+request.getBlockHash()+"]，请检查输入哈希。");
             }
             BlockVo blockVo = blockchainBrowserApplicationService.queryBlockViewByBlockHeight(block.getHeight());
             QueryBlockByBlockHashResponse response = new QueryBlockByBlockHashResponse();
@@ -239,7 +239,7 @@ public class BlockchainBrowserApplicationController {
             List<Block> blockList = new ArrayList<>();
             long blockHeight = blockchainCore.queryBlockchainHeight();
             while (true){
-                if(blockHeight <= Setting.GenesisBlockSetting.HEIGHT){
+                if(blockHeight <= GenesisBlockSetting.HEIGHT){
                     break;
                 }
                 Block block = blockchainCore.queryBlockByBlockHeight(blockHeight);
@@ -257,7 +257,7 @@ public class BlockchainBrowserApplicationController {
                 blockVo.setBlockSize(SizeTool.calculateBlockSize(block)+"字符");
                 blockVo.setTransactionCount(BlockTool.getTransactionCount(block));
                 blockVo.setMinerIncentiveValue(BlockTool.getWritedIncentiveValue(block));
-                blockVo.setTime(TimeUtil.formatMillisecondTimestamp2TimeString(block.getTimestamp()));
+                blockVo.setTime(TimeUtil.formatMillisecondTimestamp(block.getTimestamp()));
                 blockVo.setHash(block.getHash());
                 BlockVos.add(blockVo);
             }

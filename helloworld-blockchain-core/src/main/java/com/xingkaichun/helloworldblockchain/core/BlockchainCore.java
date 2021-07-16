@@ -1,10 +1,10 @@
 package com.xingkaichun.helloworldblockchain.core;
 
 import com.xingkaichun.helloworldblockchain.core.model.Block;
-import com.xingkaichun.helloworldblockchain.core.model.wallet.BuildTransactionRequest;
-import com.xingkaichun.helloworldblockchain.core.model.wallet.BuildTransactionResponse;
 import com.xingkaichun.helloworldblockchain.core.model.transaction.Transaction;
 import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionOutput;
+import com.xingkaichun.helloworldblockchain.core.model.wallet.BuildTransactionRequest;
+import com.xingkaichun.helloworldblockchain.core.model.wallet.BuildTransactionResponse;
 import com.xingkaichun.helloworldblockchain.netcore.dto.BlockDto;
 import com.xingkaichun.helloworldblockchain.netcore.dto.TransactionDto;
 
@@ -109,9 +109,17 @@ public abstract class BlockchainCore {
 
 
     /**
-     * 根据地址获取[交易输出(包含未花费交易输出和已花费交易输出)]。
+     * 根据地址获取[交易输出]。
      */
     public abstract TransactionOutput queryTransactionOutputByAddress(String address) ;
+    /**
+     * 根据地址获取[未花费交易输出]。
+     */
+    public abstract TransactionOutput queryUnspentTransactionOutputByAddress(String address) ;
+    /**
+     * 根据地址获取[已花费交易输出]。
+     */
+    public abstract TransactionOutput querySpentTransactionOutputByAddress(String address) ;
 
 
 
@@ -132,8 +140,6 @@ public abstract class BlockchainCore {
      * 根据交易哈希查询未确认交易
      */
     public abstract TransactionDto queryUnconfirmedTransactionByTransactionHash(String transactionHash) ;
-
-
 
 
 

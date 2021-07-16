@@ -3,8 +3,6 @@ package com.xingkaichun.helloworldblockchain.util;
 import org.iq80.leveldb.*;
 import org.iq80.leveldb.impl.Iq80DBFactory;
 import org.iq80.leveldb.impl.WriteBatchImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +18,6 @@ import java.util.Map;
  */
 public class KvDbUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(KvDbUtil.class);
     private static Map<String,DB> dbMap = new HashMap<>();
 
     private static DB getDb(String dbPath) {
@@ -32,7 +29,7 @@ public class KvDbUtil {
                     Options options = new Options();
                     db = factory.open(new File(dbPath), options);
                 } catch (IOException e) {
-                    logger.error(String.format("create or load LevelDB database failed. LevelDB database file path is %s.",dbPath),e);
+                    LogUtil.error("create or load LevelDB database failed. LevelDB database file path is " + dbPath + ".",e);
                     throw new RuntimeException(e);
                 }
                 dbMap.put(dbPath,db);
@@ -79,10 +76,10 @@ public class KvDbUtil {
     }
     public static void write(String dbPath, KvWriteBatch kvWriteBatch) {
         DB db = getDb(dbPath);
-        WriteBatch levelDBwriteBatch = levelDbWriteBatch(kvWriteBatch);
-        db.write(levelDBwriteBatch);
+        WriteBatch levelDbWriteBatch = toLevelDbWriteBatch(kvWriteBatch);
+        db.write(levelDbWriteBatch);
     }
-    private static WriteBatch levelDbWriteBatch(KvWriteBatch kvWriteBatch) {
+    private static WriteBatch toLevelDbWriteBatch(KvWriteBatch kvWriteBatch) {
         WriteBatch writeBatch = new WriteBatchImpl();
         if(kvWriteBatch != null){
             for (KvWrite kvWrite : kvWriteBatch.getKvWrites()){

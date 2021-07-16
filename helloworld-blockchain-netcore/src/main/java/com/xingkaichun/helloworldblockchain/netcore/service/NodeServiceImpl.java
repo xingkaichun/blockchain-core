@@ -3,7 +3,7 @@ package com.xingkaichun.helloworldblockchain.netcore.service;
 import com.xingkaichun.helloworldblockchain.netcore.dao.NodeDao;
 import com.xingkaichun.helloworldblockchain.netcore.model.Node;
 import com.xingkaichun.helloworldblockchain.netcore.po.NodePo;
-import com.xingkaichun.helloworldblockchain.setting.Setting;
+import com.xingkaichun.helloworldblockchain.setting.GenesisBlockSetting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +38,7 @@ public class NodeServiceImpl implements NodeService {
         }
         NodePo nodePo = new NodePo();
         nodePo.setIp(node.getIp());
-        long blockchainHeight = node.getBlockchainHeight()!=null?node.getBlockchainHeight(): Setting.GenesisBlockSetting.HEIGHT;
+        long blockchainHeight = node.getBlockchainHeight()!=null?node.getBlockchainHeight(): GenesisBlockSetting.HEIGHT;
         nodePo.setBlockchainHeight(blockchainHeight);
         nodeDao.addNode(nodePo);
     }

@@ -7,15 +7,14 @@ import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionIn
 import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionOutput;
 import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionType;
 import com.xingkaichun.helloworldblockchain.core.tools.*;
-import com.xingkaichun.helloworldblockchain.crypto.HexUtil;
-import com.xingkaichun.helloworldblockchain.crypto.RandomUtil;
+import com.xingkaichun.helloworldblockchain.crypto.ByteUtil;
 import com.xingkaichun.helloworldblockchain.crypto.model.Account;
 import com.xingkaichun.helloworldblockchain.netcore.dto.BlockDto;
 import com.xingkaichun.helloworldblockchain.netcore.dto.TransactionDto;
-import com.xingkaichun.helloworldblockchain.setting.Setting;
+import com.xingkaichun.helloworldblockchain.setting.BlockSetting;
+import com.xingkaichun.helloworldblockchain.setting.GenesisBlockSetting;
 import com.xingkaichun.helloworldblockchain.util.LogUtil;
-import com.xingkaichun.helloworldblockchain.util.SleepUtil;
-import com.xingkaichun.helloworldblockchain.util.StringUtil;
+import com.xingkaichun.helloworldblockchain.util.ThreadUtil;
 import com.xingkaichun.helloworldblockchain.util.TimeUtil;
 
 import java.util.ArrayList;
@@ -40,24 +39,24 @@ public class MinerDefaultImpl extends Miner {
     @Override
     public void start() {
         while(true){
-            SleepUtil.sleep(10);
+            ThreadUtil.millisecondSleep(10);
             if(!isActive()){
                 continue;
             }
             //创建一个账户用于存放挖矿成功后发放的激励金额
             Account minerAccount = wallet.createAccount();
             Block block = buildMiningBlock(blockchainDatabase,unconfirmedTransactionDatabase,minerAccount);
-            long startTimestamp = TimeUtil.currentMillisecondTimestamp();
+            long startTimestamp = TimeUtil.millisecondTimestamp();
             while(true){
                 if(!isActive()){
                     break;
                 }
                 //在挖矿的期间，可能收集到新的交易。每隔一定的时间，重新组装挖矿中的区块，这样新收集到交易就可以被放进挖矿中的区块了。
-                if(TimeUtil.currentMillisecondTimestamp()-startTimestamp > coreConfiguration.getMinerMineTimeInterval()){
+                if(TimeUtil.millisecondTimestamp()-startTimestamp > coreConfiguration.getMinerMineTimeInterval()){
                     break;
                 }
                 //随机数
-                block.setNonce(HexUtil.bytesToHexString(RandomUtil.random32Bytes()));
+                block.setNonce(ByteUtil.bytesToHexString(ByteUtil.random32Bytes()));
                 //计算区块哈希
                 block.setHash(BlockTool.calculateBlockHash(block));
                 //判断共识是否达成(即挖矿是否成功)
@@ -100,7 +99,7 @@ public class MinerDefaultImpl extends Miner {
      * 构建挖矿区块
      */
     private Block buildMiningBlock(BlockchainDatabase blockchainDatabase, UnconfirmedTransactionDatabase unconfirmedTransactionDatabase, Account minerAccount) {
-        long timestamp = TimeUtil.currentMillisecondTimestamp();
+        long timestamp = TimeUtil.millisecondTimestamp();
 
         Block tailBlock = blockchainDatabase.queryTailBlock();
         Block nonNonceBlock = new Block();
@@ -108,8 +107,8 @@ public class MinerDefaultImpl extends Miner {
         nonNonceBlock.setTimestamp(timestamp);
 
         if(tailBlock == null){
-            nonNonceBlock.setHeight(Setting.GenesisBlockSetting.HEIGHT +1);
-            nonNonceBlock.setPreviousHash(Setting.GenesisBlockSetting.HASH);
+            nonNonceBlock.setHeight(GenesisBlockSetting.HEIGHT +1);
+            nonNonceBlock.setPreviousHash(GenesisBlockSetting.HASH);
         } else {
             nonNonceBlock.setHeight(tailBlock.getHeight()+1);
             nonNonceBlock.setPreviousHash(tailBlock.getHash());
@@ -167,7 +166,7 @@ public class MinerDefaultImpl extends Miner {
                     transactions.add(transaction);
                 } catch (Exception e) {
                     String transactionHash = TransactionDtoTool.calculateTransactionHash(transactionDto);
-                    LogUtil.error(StringUtil.format("类型转换异常,将从挖矿交易数据库中删除该交易。交易哈希[%s]。",transactionHash),e);
+                    LogUtil.error("类型转换异常,将从挖矿交易数据库中删除该交易["+transactionHash+"]。",e);
                     unconfirmedTransactionDatabase.deleteByTransactionHash(transactionHash);
                 }
             }
@@ -264,12 +263,12 @@ public class MinerDefaultImpl extends Miner {
         for(int i=0; i<backupTransactions.size(); i++){
             //序号从0开始，加一。
             //留给挖矿交易一个位置，减一。
-            if(i+1 > Setting.BlockSetting.BLOCK_MAX_TRANSACTION_COUNT-1){
+            if(i+1 > BlockSetting.BLOCK_MAX_TRANSACTION_COUNT-1){
                 break;
             }
             Transaction transaction = backupTransactions.get(i);
             size += SizeTool.calculateTransactionSize(transaction);
-            if(size > Setting.BlockSetting.BLOCK_MAX_SIZE){
+            if(size > BlockSetting.BLOCK_MAX_CHARACTER_COUNT){
                 break;
             }
             transactions.add(transaction);

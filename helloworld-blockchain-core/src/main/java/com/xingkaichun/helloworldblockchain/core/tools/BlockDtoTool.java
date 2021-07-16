@@ -1,7 +1,6 @@
 package com.xingkaichun.helloworldblockchain.core.tools;
 
 import com.xingkaichun.helloworldblockchain.crypto.ByteUtil;
-import com.xingkaichun.helloworldblockchain.crypto.HexUtil;
 import com.xingkaichun.helloworldblockchain.crypto.MerkleTreeUtil;
 import com.xingkaichun.helloworldblockchain.crypto.Sha256Util;
 import com.xingkaichun.helloworldblockchain.netcore.dto.BlockDto;
@@ -21,14 +20,14 @@ public class BlockDtoTool {
      * 计算区块的Hash值
      */
     public static String calculateBlockHash(BlockDto blockDto) {
-        byte[] bytesTimestamp = ByteUtil.long8ToByte8(blockDto.getTimestamp());
-        byte[] bytesPreviousBlockHash = HexUtil.hexStringToBytes(blockDto.getPreviousHash());
-        byte[] bytesMerkleTreeRoot = HexUtil.hexStringToBytes(calculateBlockMerkleTreeRoot(blockDto));
-        byte[] bytesNonce = HexUtil.hexStringToBytes(blockDto.getNonce());
+        byte[] bytesTimestamp = ByteUtil.uint64ToBytes(blockDto.getTimestamp());
+        byte[] bytesPreviousBlockHash = ByteUtil.hexStringToBytes(blockDto.getPreviousHash());
+        byte[] bytesMerkleTreeRoot = ByteUtil.hexStringToBytes(calculateBlockMerkleTreeRoot(blockDto));
+        byte[] bytesNonce = ByteUtil.hexStringToBytes(blockDto.getNonce());
 
-        byte[] bytesBlockHeader = ByteUtil.concat4(bytesTimestamp,bytesPreviousBlockHash,bytesMerkleTreeRoot,bytesNonce);
+        byte[] bytesBlockHeader = ByteUtil.concatenate4(bytesTimestamp,bytesPreviousBlockHash,bytesMerkleTreeRoot,bytesNonce);
         byte[] bytesBlockHash = Sha256Util.doubleDigest(bytesBlockHeader);
-        return HexUtil.bytesToHexString(bytesBlockHash);
+        return ByteUtil.bytesToHexString(bytesBlockHash);
     }
 
     /**
@@ -40,10 +39,10 @@ public class BlockDtoTool {
         if(transactions != null){
             for(TransactionDto transactionDto : transactions) {
                 String transactionHash = TransactionDtoTool.calculateTransactionHash(transactionDto);
-                byte[] bytesTransactionHash = HexUtil.hexStringToBytes(transactionHash);
+                byte[] bytesTransactionHash = ByteUtil.hexStringToBytes(transactionHash);
                 bytesTransactionHashs.add(bytesTransactionHash);
             }
         }
-        return HexUtil.bytesToHexString(MerkleTreeUtil.calculateMerkleTreeRoot(bytesTransactionHashs));
+        return ByteUtil.bytesToHexString(MerkleTreeUtil.calculateMerkleTreeRoot(bytesTransactionHashs));
     }
 }

@@ -1,6 +1,7 @@
 package com.xingkaichun.helloworldblockchain.crypto;
 
 import com.xingkaichun.helloworldblockchain.crypto.model.Account;
+import com.xingkaichun.helloworldblockchain.util.LogUtil;
 import com.xingkaichun.helloworldblockchain.util.StringUtil;
 import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.ECKey;
@@ -19,8 +20,6 @@ import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.crypto.signers.ECDSASigner;
 import org.bouncycastle.crypto.signers.HMacDSAKCalculator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
@@ -32,8 +31,6 @@ import java.security.SecureRandom;
  * @author 邢开春 409060350@qq.com
  */
 public class AccountUtil {
-
-    private static final Logger logger = LoggerFactory.getLogger(AccountUtil.class);
 
     private static final ECDomainParameters CURVE;
     private static final SecureRandom SECURE_RANDOM;
@@ -74,7 +71,7 @@ public class AccountUtil {
             Account account = new Account(privateKey,publicKey,publicKeyHash,address);
             return account;
         } catch (Exception e) {
-            logger.debug("生成账户失败。",e);
+            LogUtil.error("生成账户失败。",e);
             throw new RuntimeException(e);
         }
     }
@@ -84,9 +81,6 @@ public class AccountUtil {
      */
     public static Account accountFromPrivateKey(String privateKey) {
         try {
-            if(!checkPrivateKey(privateKey)){
-                throw new RuntimeException("私钥不合法。");
-            }
             BigInteger bigIntegerPrivateKey = decodePrivateKey0(privateKey);
             byte[] bytesPublicKey = publicKeyFromPrivateKey0(bigIntegerPrivateKey);
 
@@ -96,7 +90,7 @@ public class AccountUtil {
             Account account = new Account(privateKey,publicKey,publicKeyHash,address);
             return account;
         } catch (Exception e) {
-            logger.debug("从私钥恢复账户失败。",e);
+            LogUtil.error("从私钥恢复账户失败。",e);
             throw new RuntimeException(e);
         }
     }
@@ -106,10 +100,10 @@ public class AccountUtil {
      */
     public static String addressFromPublicKey(String publicKey) {
         try {
-            byte[] bytesPublicKey = HexUtil.hexStringToBytes(publicKey);
+            byte[] bytesPublicKey = ByteUtil.hexStringToBytes(publicKey);
             return base58AddressFromPublicKey0(bytesPublicKey);
         } catch (Exception e) {
-            logger.debug("公钥生成地址失败。",e);
+            LogUtil.error("公钥生成地址失败。",e);
             throw new RuntimeException(e);
         }
     }
@@ -119,10 +113,10 @@ public class AccountUtil {
      */
     public static String addressFromPublicKeyHash(String publicKeyHash) {
         try {
-            byte[] bytesPublicKeyHash = HexUtil.hexStringToBytes(publicKeyHash);
+            byte[] bytesPublicKeyHash = ByteUtil.hexStringToBytes(publicKeyHash);
             return base58AddressFromPublicKeyHash0(bytesPublicKeyHash);
         } catch (Exception e) {
-            logger.debug("公钥哈希生成地址失败。",e);
+            LogUtil.error("公钥哈希生成地址失败。",e);
             throw new RuntimeException(e);
         }
     }
@@ -134,9 +128,9 @@ public class AccountUtil {
         try {
             byte[] bytesPublicKey = decodePublicKey0(publicKey);
             byte[] bytesPublicKeyHash = publicKeyHashFromPublicKey0(bytesPublicKey);
-            return HexUtil.bytesToHexString(bytesPublicKeyHash);
+            return ByteUtil.bytesToHexString(bytesPublicKeyHash);
         } catch (Exception e) {
-            logger.debug("公钥生成公钥哈希失败。",e);
+            LogUtil.error("公钥生成公钥哈希失败。",e);
             throw new RuntimeException(e);
         }
     }
@@ -147,11 +141,10 @@ public class AccountUtil {
     public static String publicKeyHashFromAddress(String address) {
         try {
             byte[] bytesAddress = Base58Util.decode(address);
-            byte[] bytesPublicKeyHash = new byte[20];
-            ByteUtil.copyTo(bytesAddress, 1, 20, bytesPublicKeyHash, 0);
-            return HexUtil.bytesToHexString(bytesPublicKeyHash);
+            byte[] bytesPublicKeyHash = ByteUtil.copy(bytesAddress, 1, 20);
+            return ByteUtil.bytesToHexString(bytesPublicKeyHash);
         } catch (Exception e) {
-            logger.debug("地址生成公钥哈希失败。",e);
+            LogUtil.error("地址生成公钥哈希失败。",e);
             throw new RuntimeException(e);
         }
     }
@@ -159,14 +152,13 @@ public class AccountUtil {
     /**
      * 签名
      */
-    public static String signature(String privateKey, String message) {
+    public static String signature(String privateKey, byte[] bytesMessage) {
         try {
             BigInteger bigIntegerPrivateKey = decodePrivateKey0(privateKey);
-            byte[] bytesMessage = HexUtil.hexStringToBytes(message);
             byte[] bytesSignature = signature0(bigIntegerPrivateKey,bytesMessage);
-            return HexUtil.bytesToHexString(bytesSignature);
+            return ByteUtil.bytesToHexString(bytesSignature);
         } catch (Exception e) {
-            logger.debug("签名出错。");
+            LogUtil.debug("签名出错。");
             throw new RuntimeException(e);
         }
     }
@@ -174,14 +166,12 @@ public class AccountUtil {
     /**
      * 验证签名
      */
-    public static boolean verifySignature(String publicKey, String message, String signature) {
+    public static boolean verifySignature(String publicKey, byte[] bytesMessage, byte[] bytesSignature) {
         try {
             byte[] bytesPublicKey = decodePublicKey0(publicKey);
-            byte[] bytesMessage = HexUtil.hexStringToBytes(message);
-            byte[] bytesSignature = HexUtil.hexStringToBytes(signature);
             return verifySignature0(bytesPublicKey,bytesMessage,bytesSignature);
         }catch(Exception e) {
-            logger.debug("验证签名出错。");
+            LogUtil.debug("验证签名出错。");
             return false;
         }
     }
@@ -196,24 +186,17 @@ public class AccountUtil {
     }
 
     /**
-     * 校验是否是合法的私钥
-     */
-    public static boolean checkPrivateKey(String privateKey){
-        return privateKey.length()==64 && HexUtil.checkHexString(privateKey);
-    }
-
-    /**
      * 是否是合法的P2PKH地址
      */
     public static boolean isPayToPublicKeyHashAddress(String address) {
         try {
-            byte[] bytesAddress = Base58.decode(address);
+            byte[] bytesAddress = Base58Util.decode(address);
             byte[] bytesPublicKeyHash = new byte[20];
             ByteUtil.copyTo(bytesAddress, 1, 20, bytesPublicKeyHash, 0);
-            String base58Address = addressFromPublicKeyHash(HexUtil.bytesToHexString(bytesPublicKeyHash));
+            String base58Address = addressFromPublicKeyHash(ByteUtil.bytesToHexString(bytesPublicKeyHash));
             return base58Address.equals(address);
         }catch (Exception e){
-            logger.debug(String.format("地址[%s]不是base58格式的地址。",address));
+            LogUtil.debug("地址["+address+"]不是base58格式的地址。");
             return false;
         }
     }
@@ -245,7 +228,7 @@ public class AccountUtil {
      * 由编码公钥解码出原始公钥
      */
     private static byte[] decodePublicKey0(String publicKey) {
-        byte[] bytesPublicKey = HexUtil.hexStringToBytes(publicKey);
+        byte[] bytesPublicKey = ByteUtil.hexStringToBytes(publicKey);
         return bytesPublicKey;
     }
     /**
@@ -260,7 +243,7 @@ public class AccountUtil {
      * 将原始公钥进行编码操作，生成编码公钥
      */
     private static String encodePublicKey0(byte[] bytesPublicKey) {
-        String publicKey = HexUtil.bytesToHexString(bytesPublicKey);
+        String publicKey = ByteUtil.bytesToHexString(bytesPublicKey);
         return publicKey;
     }
 
@@ -284,7 +267,7 @@ public class AccountUtil {
             seq.close();
             return bos.toByteArray();
         } catch (Exception e) {
-            logger.debug("签名出错。");
+            LogUtil.debug("签名出错。");
             throw new RuntimeException(e);
         }
     }
@@ -307,7 +290,7 @@ public class AccountUtil {
             decoder.close();
             return signer.verifySignature(message, r.getValue(), s.getValue());
         } catch (Exception e) {
-            logger.debug("验证签名，出错。");
+            LogUtil.debug("验证签名，出错。");
             return false;
         }
     }
@@ -326,13 +309,13 @@ public class AccountUtil {
     private static String base58AddressFromPublicKeyHash0(byte[] bytesPublicKeyHash) {
 
         //地址版本号(1个字节)与公钥哈希(20个字节)
-        byte[] bytesVersionAndPublicKeyHash = ByteUtil.concat(new byte[]{VERSION},bytesPublicKeyHash);
+        byte[] bytesVersionAndPublicKeyHash = ByteUtil.concatenate(new byte[]{VERSION},bytesPublicKeyHash);
 
         //地址校验码(4个字节)
         byte[] bytesCheckCode = ByteUtil.copy(Sha256Util.doubleDigest(bytesVersionAndPublicKeyHash), 0, 4);
 
         //地址(25个字节)=地址版本号(1个字节)+公钥哈希(20个字节)+地址校验码(4个字节)
-        byte[] bytesAddress = ByteUtil.concat(bytesVersionAndPublicKeyHash,bytesCheckCode);
+        byte[] bytesAddress = ByteUtil.concatenate(bytesVersionAndPublicKeyHash,bytesCheckCode);
 
         //用Base58编码地址
         String base58Address = Base58Util.encode(bytesAddress);

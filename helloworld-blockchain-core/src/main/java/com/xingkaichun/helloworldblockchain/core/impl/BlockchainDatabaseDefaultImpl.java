@@ -3,17 +3,18 @@ package com.xingkaichun.helloworldblockchain.core.impl;
 import com.xingkaichun.helloworldblockchain.core.*;
 import com.xingkaichun.helloworldblockchain.core.model.Block;
 import com.xingkaichun.helloworldblockchain.core.model.enums.BlockchainActionEnum;
+import com.xingkaichun.helloworldblockchain.core.model.script.*;
 import com.xingkaichun.helloworldblockchain.core.model.transaction.Transaction;
 import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionInput;
 import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionOutput;
 import com.xingkaichun.helloworldblockchain.core.tools.*;
 import com.xingkaichun.helloworldblockchain.crypto.ByteUtil;
 import com.xingkaichun.helloworldblockchain.netcore.dto.BlockDto;
-import com.xingkaichun.helloworldblockchain.setting.Setting;
+import com.xingkaichun.helloworldblockchain.setting.GenesisBlockSetting;
+import com.xingkaichun.helloworldblockchain.setting.SystemVersionSettingTool;
 import com.xingkaichun.helloworldblockchain.util.FileUtil;
 import com.xingkaichun.helloworldblockchain.util.KvDbUtil;
 import com.xingkaichun.helloworldblockchain.util.LogUtil;
-import com.xingkaichun.helloworldblockchain.util.NumberUtil;
 
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -90,7 +91,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                 if(tailBlock == null){
                     return;
                 }
-                if(NumberUtil.isLessThan(tailBlock.getHeight(),blockHeight)){
+                if(tailBlock.getHeight() < blockHeight){
                     return;
                 }
                 KvDbUtil.KvWriteBatch kvWriteBatch = createBlockWriteBatch(tailBlock, BlockchainActionEnum.DELETE_BLOCK);
@@ -108,7 +109,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
     @Override
     public boolean checkBlock(Block block) {
         //校验系统版本是否支持
-        if(!Setting.SystemVersionSetting.checkSystemVersion(block.getHeight())){
+        if(!SystemVersionSettingTool.checkSystemVersion(block.getHeight())){
             LogUtil.debug("系统版本过低，不支持校验区块，请尽快升级系统。");
             return false;
         }
@@ -143,17 +144,17 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
             return false;
         }
         //校验新产生的哈希
-        if(!checkNewHash(block)){
+        if(!checkBlockNewHash(block)){
             LogUtil.debug("区块数据异常，区块中新产生的哈希异常。");
             return false;
         }
         //校验新产生的地址
-        if(!checkNewAddress(block)){
+        if(!checkBlockNewAddress(block)){
             LogUtil.debug("区块数据异常，区块中新产生的哈希异常。");
             return false;
         }
         //校验双花
-        if(!checkDoubleSpend(block)){
+        if(!checkBlockDoubleSpend(block)){
             LogUtil.debug("区块数据异常，检测到双花攻击。");
             return false;
         }
@@ -204,12 +205,12 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
 
         //业务校验
         //校验新产生的哈希
-        if(!checkNewHash(transaction)){
+        if(!checkTransactionNewHash(transaction)){
             LogUtil.debug("区块数据异常，区块中新产生的哈希异常。");
             return false;
         }
         //校验新产生的地址
-        if(!checkNewAddress(transaction)){
+        if(!checkTransactionNewAddress(transaction)){
             LogUtil.debug("区块数据异常，区块中新产生的哈希异常。");
             return false;
         }
@@ -219,12 +220,12 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
             return false;
         }
         //校验双花
-        if(!checkDoubleSpend(transaction)){
+        if(!checkTransactionDoubleSpend(transaction)){
             LogUtil.debug("交易数据异常，检测到双花攻击。");
             return false;
         }
         //校验脚本
-        if(!virtualMachine.checkTransactionScript(transaction)) {
+        if(!checkTransactionScript(transaction)) {
             LogUtil.debug("交易校验失败：交易[输入脚本]解锁交易[输出脚本]异常。");
             return false;
         }
@@ -239,9 +240,9 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
     public long queryBlockchainHeight() {
         byte[] bytesBlockchainHeight = KvDbUtil.get(getBlockchainDatabasePath(), BlockchainDatabaseKeyTool.buildBlockchainHeightKey());
         if(bytesBlockchainHeight == null){
-            return Setting.GenesisBlockSetting.HEIGHT;
+            return GenesisBlockSetting.HEIGHT;
         }
-        return ByteUtil.byte8ToLong8(bytesBlockchainHeight);
+        return ByteUtil.bytesToUint64(bytesBlockchainHeight);
     }
 
     @Override
@@ -250,7 +251,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(byteTotalTransactionCount == null){
             return 0;
         }
-        return ByteUtil.byte8ToLong8(byteTotalTransactionCount);
+        return ByteUtil.bytesToUint64(byteTotalTransactionCount);
     }
     @Override
     public long queryBlockchainTransactionOutputHeight() {
@@ -258,7 +259,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(byteTotalTransactionCount == null){
             return 0;
         }
-        return ByteUtil.byte8ToLong8(byteTotalTransactionCount);
+        return ByteUtil.bytesToUint64(byteTotalTransactionCount);
     }
     //endregion
 
@@ -268,7 +269,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
     @Override
     public Block queryTailBlock() {
         long blockchainHeight = queryBlockchainHeight();
-        if(NumberUtil.isLessEqualThan(blockchainHeight, Setting.GenesisBlockSetting.HEIGHT)){
+        if(blockchainHeight <= GenesisBlockSetting.HEIGHT){
             return null;
         }
         return queryBlockByBlockHeight(blockchainHeight);
@@ -287,7 +288,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(bytesBlockHeight == null){
             return null;
         }
-        return queryBlockByBlockHeight(ByteUtil.byte8ToLong8(bytesBlockHeight));
+        return queryBlockByBlockHeight(ByteUtil.bytesToUint64(bytesBlockHeight));
     }
     //endregion
 
@@ -300,7 +301,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(transactionHeight == null){
             return null;
         }
-        return queryTransactionByTransactionHeight(ByteUtil.byte8ToLong8(transactionHeight));
+        return queryTransactionByTransactionHeight(ByteUtil.bytesToUint64(transactionHeight));
     }
 
     @Override
@@ -309,7 +310,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(sourceTransactionHeight == null){
             return null;
         }
-        return queryTransactionByTransactionHeight(ByteUtil.byte8ToLong8(sourceTransactionHeight));
+        return queryTransactionByTransactionHeight(ByteUtil.bytesToUint64(sourceTransactionHeight));
     }
 
     @Override
@@ -318,7 +319,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(destinationTransactionHeight == null){
             return null;
         }
-        return queryTransactionByTransactionHeight(ByteUtil.byte8ToLong8(destinationTransactionHeight));
+        return queryTransactionByTransactionHeight(ByteUtil.bytesToUint64(destinationTransactionHeight));
     }
 
     @Override
@@ -349,7 +350,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(bytesTransactionOutputHeight == null){
             return null;
         }
-        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.byte8ToLong8(bytesTransactionOutputHeight));
+        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.bytesToUint64(bytesTransactionOutputHeight));
     }
 
     @Override
@@ -358,7 +359,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(bytesTransactionOutputHeight == null){
             return null;
         }
-        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.byte8ToLong8(bytesTransactionOutputHeight));
+        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.bytesToUint64(bytesTransactionOutputHeight));
     }
 
     @Override
@@ -367,7 +368,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(bytesTransactionOutputHeight == null){
             return null;
         }
-        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.byte8ToLong8(bytesTransactionOutputHeight));
+        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.bytesToUint64(bytesTransactionOutputHeight));
     }
 
     @Override
@@ -376,7 +377,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(bytesTransactionOutputHeight == null){
             return null;
         }
-        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.byte8ToLong8(bytesTransactionOutputHeight));
+        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.bytesToUint64(bytesTransactionOutputHeight));
     }
 
     @Override
@@ -385,7 +386,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(bytesTransactionOutputHeight == null){
             return null;
         }
-        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.byte8ToLong8(bytesTransactionOutputHeight));
+        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.bytesToUint64(bytesTransactionOutputHeight));
     }
 
     @Override
@@ -394,7 +395,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         if(bytesTransactionOutputHeight == null){
             return null;
         }
-        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.byte8ToLong8(bytesTransactionOutputHeight));
+        return queryTransactionOutputByTransactionOutputHeight(ByteUtil.bytesToUint64(bytesTransactionOutputHeight));
     }
     //endregion
 
@@ -446,7 +447,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                     for(TransactionOutput transactionOutput:outputs){
                         byte[] transactionOutputIdToToSourceTransactionHeightKey = BlockchainDatabaseKeyTool.buildTransactionOutputIdToSourceTransactionHeightKey(transactionOutput.getTransactionHash(),transactionOutput.getTransactionOutputIndex());
                         if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
-                            kvWriteBatch.put(transactionOutputIdToToSourceTransactionHeightKey, ByteUtil.long8ToByte8(transaction.getTransactionHeight()));
+                            kvWriteBatch.put(transactionOutputIdToToSourceTransactionHeightKey, ByteUtil.uint64ToBytes(transaction.getTransactionHeight()));
                         } else {
                             kvWriteBatch.delete(transactionOutputIdToToSourceTransactionHeightKey);
                         }
@@ -468,7 +469,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                         TransactionOutput unspentTransactionOutput = transactionInput.getUnspentTransactionOutput();
                         byte[] transactionOutputIdToToDestinationTransactionHeightKey = BlockchainDatabaseKeyTool.buildTransactionOutputIdToDestinationTransactionHeightKey(unspentTransactionOutput.getTransactionHash(),unspentTransactionOutput.getTransactionOutputIndex());
                         if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
-                            kvWriteBatch.put(transactionOutputIdToToDestinationTransactionHeightKey, ByteUtil.long8ToByte8(transaction.getTransactionHeight()));
+                            kvWriteBatch.put(transactionOutputIdToToDestinationTransactionHeightKey, ByteUtil.uint64ToBytes(transaction.getTransactionHeight()));
                         } else {
                             kvWriteBatch.delete(transactionOutputIdToToDestinationTransactionHeightKey);
                         }
@@ -489,7 +490,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                     for(TransactionOutput output:outputs){
                         byte[] transactionOutputIdToTransactionOutputHeightKey = BlockchainDatabaseKeyTool.buildTransactionOutputIdToTransactionOutputHeightKey(output.getTransactionHash(),output.getTransactionOutputIndex());
                         if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
-                            kvWriteBatch.put(transactionOutputIdToTransactionOutputHeightKey, ByteUtil.long8ToByte8(output.getTransactionOutputHeight()));
+                            kvWriteBatch.put(transactionOutputIdToTransactionOutputHeightKey, ByteUtil.uint64ToBytes(output.getTransactionOutputHeight()));
                         } else {
                             kvWriteBatch.delete(transactionOutputIdToTransactionOutputHeightKey);
                         }
@@ -534,7 +535,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                         if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
                             kvWriteBatch.delete(transactionOutputIdToUnspentTransactionOutputHeightKey);
                         } else {
-                            kvWriteBatch.put(transactionOutputIdToUnspentTransactionOutputHeightKey, ByteUtil.long8ToByte8(unspentTransactionOutput.getTransactionOutputHeight()));
+                            kvWriteBatch.put(transactionOutputIdToUnspentTransactionOutputHeightKey, ByteUtil.uint64ToBytes(unspentTransactionOutput.getTransactionOutputHeight()));
                         }
                     }
                 }
@@ -543,7 +544,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                     for(TransactionOutput output:outputs){
                         byte[] transactionOutputIdToUnspentTransactionOutputHeightKey = BlockchainDatabaseKeyTool.buildTransactionOutputIdToUnspentTransactionOutputHeightKey(output.getTransactionHash(),output.getTransactionOutputIndex());
                         if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
-                            kvWriteBatch.put(transactionOutputIdToUnspentTransactionOutputHeightKey, ByteUtil.long8ToByte8(output.getTransactionOutputHeight()));
+                            kvWriteBatch.put(transactionOutputIdToUnspentTransactionOutputHeightKey, ByteUtil.uint64ToBytes(output.getTransactionOutputHeight()));
                         } else {
                             kvWriteBatch.delete(transactionOutputIdToUnspentTransactionOutputHeightKey);
                         }
@@ -565,7 +566,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                         TransactionOutput unspentTransactionOutput = transactionInput.getUnspentTransactionOutput();
                         byte[] transactionOutputIdToSpentTransactionOutputHeightKey = BlockchainDatabaseKeyTool.buildTransactionOutputIdToSpentTransactionOutputHeightKey(unspentTransactionOutput.getTransactionHash(),unspentTransactionOutput.getTransactionOutputIndex());
                         if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
-                            kvWriteBatch.put(transactionOutputIdToSpentTransactionOutputHeightKey, ByteUtil.long8ToByte8(unspentTransactionOutput.getTransactionOutputHeight()));
+                            kvWriteBatch.put(transactionOutputIdToSpentTransactionOutputHeightKey, ByteUtil.uint64ToBytes(unspentTransactionOutput.getTransactionOutputHeight()));
                         } else {
                             kvWriteBatch.delete(transactionOutputIdToSpentTransactionOutputHeightKey);
                         }
@@ -578,7 +579,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                         if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
                             kvWriteBatch.delete(transactionOutputIdToSpentTransactionOutputHeightKey);
                         } else {
-                            kvWriteBatch.put(transactionOutputIdToSpentTransactionOutputHeightKey, ByteUtil.long8ToByte8(output.getTransactionOutputHeight()));
+                            kvWriteBatch.put(transactionOutputIdToSpentTransactionOutputHeightKey, ByteUtil.uint64ToBytes(output.getTransactionOutputHeight()));
                         }
                     }
                 }
@@ -611,7 +612,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
             for(Transaction transaction:transactions){
                 byte[] transactionHashToTransactionHeightKey = BlockchainDatabaseKeyTool.buildTransactionHashToTransactionHeightKey(transaction.getTransactionHash());
                 if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
-                    kvWriteBatch.put(transactionHashToTransactionHeightKey, ByteUtil.long8ToByte8(transaction.getTransactionHeight()));
+                    kvWriteBatch.put(transactionHashToTransactionHeightKey, ByteUtil.uint64ToBytes(transaction.getTransactionHeight()));
                 } else {
                     kvWriteBatch.delete(transactionHashToTransactionHeightKey);
                 }
@@ -624,9 +625,9 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
     private void storeBlockchainHeight(KvDbUtil.KvWriteBatch kvWriteBatch, Block block, BlockchainActionEnum blockchainActionEnum) {
         byte[] blockchainHeightKey = BlockchainDatabaseKeyTool.buildBlockchainHeightKey();
         if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
-            kvWriteBatch.put(blockchainHeightKey, ByteUtil.long8ToByte8(block.getHeight()));
+            kvWriteBatch.put(blockchainHeightKey, ByteUtil.uint64ToBytes(block.getHeight()));
         }else{
-            kvWriteBatch.put(blockchainHeightKey, ByteUtil.long8ToByte8(block.getHeight()-1));
+            kvWriteBatch.put(blockchainHeightKey, ByteUtil.uint64ToBytes(block.getHeight()-1));
         }
     }
     /**
@@ -635,7 +636,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
     private void storeBlockHashToBlockHeight(KvDbUtil.KvWriteBatch kvWriteBatch, Block block, BlockchainActionEnum blockchainActionEnum) {
         byte[] blockHashBlockHeightKey = BlockchainDatabaseKeyTool.buildBlockHashToBlockHeightKey(block.getHash());
         if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
-            kvWriteBatch.put(blockHashBlockHeightKey, ByteUtil.long8ToByte8(block.getHeight()));
+            kvWriteBatch.put(blockHashBlockHeightKey, ByteUtil.uint64ToBytes(block.getHeight()));
         }else{
             kvWriteBatch.delete(blockHashBlockHeightKey);
         }
@@ -647,9 +648,9 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         long transactionCount = queryBlockchainTransactionHeight();
         byte[] bytesBlockchainTransactionCountKey = BlockchainDatabaseKeyTool.buildBlockchainTransactionHeightKey();
         if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
-            kvWriteBatch.put(bytesBlockchainTransactionCountKey, ByteUtil.long8ToByte8(transactionCount + BlockTool.getTransactionCount(block)));
+            kvWriteBatch.put(bytesBlockchainTransactionCountKey, ByteUtil.uint64ToBytes(transactionCount + BlockTool.getTransactionCount(block)));
         }else{
-            kvWriteBatch.put(bytesBlockchainTransactionCountKey, ByteUtil.long8ToByte8(transactionCount - BlockTool.getTransactionCount(block)));
+            kvWriteBatch.put(bytesBlockchainTransactionCountKey, ByteUtil.uint64ToBytes(transactionCount - BlockTool.getTransactionCount(block)));
         }
     }
     /**
@@ -659,9 +660,9 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         long transactionOutputCount = queryBlockchainTransactionOutputHeight();
         byte[] bytesBlockchainTransactionOutputHeightKey = BlockchainDatabaseKeyTool.buildBlockchainTransactionOutputHeightKey();
         if(BlockchainActionEnum.ADD_BLOCK == blockchainActionEnum){
-            kvWriteBatch.put(bytesBlockchainTransactionOutputHeightKey, ByteUtil.long8ToByte8(transactionOutputCount + BlockTool.getTransactionOutputCount(block)));
+            kvWriteBatch.put(bytesBlockchainTransactionOutputHeightKey, ByteUtil.uint64ToBytes(transactionOutputCount + BlockTool.getTransactionOutputCount(block)));
         }else{
-            kvWriteBatch.put(bytesBlockchainTransactionOutputHeightKey, ByteUtil.long8ToByte8(transactionOutputCount - BlockTool.getTransactionOutputCount(block)));
+            kvWriteBatch.put(bytesBlockchainTransactionOutputHeightKey, ByteUtil.uint64ToBytes(transactionOutputCount - BlockTool.getTransactionOutputCount(block)));
         }
     }
     /**
@@ -737,7 +738,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                     if(blockchainActionEnum == BlockchainActionEnum.ADD_BLOCK){
                         kvWriteBatch.delete(addressToUnspentTransactionOutputHeightKey);
                     }else{
-                        kvWriteBatch.put(addressToUnspentTransactionOutputHeightKey, ByteUtil.long8ToByte8(utxo.getTransactionOutputHeight()));
+                        kvWriteBatch.put(addressToUnspentTransactionOutputHeightKey, ByteUtil.uint64ToBytes(utxo.getTransactionOutputHeight()));
                     }
                 }
             }
@@ -746,7 +747,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                 for (TransactionOutput transactionOutput:outputs){
                     byte[] addressToUnspentTransactionOutputHeightKey = BlockchainDatabaseKeyTool.buildAddressToUnspentTransactionOutputHeightKey(transactionOutput.getAddress());
                     if(blockchainActionEnum == BlockchainActionEnum.ADD_BLOCK){
-                        kvWriteBatch.put(addressToUnspentTransactionOutputHeightKey, ByteUtil.long8ToByte8(transactionOutput.getTransactionOutputHeight()));
+                        kvWriteBatch.put(addressToUnspentTransactionOutputHeightKey, ByteUtil.uint64ToBytes(transactionOutput.getTransactionOutputHeight()));
                     }else{
                         kvWriteBatch.delete(addressToUnspentTransactionOutputHeightKey);
                     }
@@ -768,7 +769,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                 for (TransactionOutput transactionOutput:outputs){
                     byte[] addressToTransactionOutputHeightKey = BlockchainDatabaseKeyTool.buildAddressToTransactionOutputHeightKey(transactionOutput.getAddress());
                     if(blockchainActionEnum == BlockchainActionEnum.ADD_BLOCK){
-                        kvWriteBatch.put(addressToTransactionOutputHeightKey, ByteUtil.long8ToByte8(transactionOutput.getTransactionOutputHeight()));
+                        kvWriteBatch.put(addressToTransactionOutputHeightKey, ByteUtil.uint64ToBytes(transactionOutput.getTransactionOutputHeight()));
                     }else{
                         kvWriteBatch.delete(addressToTransactionOutputHeightKey);
                     }
@@ -791,7 +792,7 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
                     TransactionOutput utxo = transactionInput.getUnspentTransactionOutput();
                     byte[] addressToSpentTransactionOutputHeightKey = BlockchainDatabaseKeyTool.buildAddressToSpentTransactionOutputHeightKey(utxo.getAddress());
                     if(blockchainActionEnum == BlockchainActionEnum.ADD_BLOCK){
-                        kvWriteBatch.put(addressToSpentTransactionOutputHeightKey, ByteUtil.long8ToByte8(utxo.getTransactionOutputHeight()));
+                        kvWriteBatch.put(addressToSpentTransactionOutputHeightKey, ByteUtil.uint64ToBytes(utxo.getTransactionOutputHeight()));
                     }else{
                         kvWriteBatch.delete(addressToSpentTransactionOutputHeightKey);
                     }
@@ -801,7 +802,149 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
     }
     //endregion
 
+    private String getBlockchainDatabasePath(){
+        return FileUtil.newPath(coreConfiguration.getCorePath(), BLOCKCHAIN_DATABASE_NAME);
+    }
 
+    //region 新产生的哈希相关
+    /**
+     * 校验区块新产生的哈希
+     */
+    private boolean checkBlockNewHash(Block block) {
+        //校验哈希作为主键的正确性
+        //新产生的哈希不能有重复
+        if(BlockTool.isExistDuplicateNewHash(block)){
+            LogUtil.debug("区块数据异常，区块中新产生的哈希有重复。");
+            return false;
+        }
+
+        //新产生的哈希不能被区块链使用过了
+        //校验区块Hash是否已经被使用了
+        String blockHash = block.getHash();
+        if(isHashUsed(blockHash)){
+            LogUtil.debug("区块数据异常，区块Hash已经被使用了。");
+            return false;
+        }
+        //校验每一笔交易新产生的Hash是否正确
+        List<Transaction> blockTransactions = block.getTransactions();
+        if(blockTransactions != null){
+            for(Transaction transaction:blockTransactions){
+                if(checkTransactionNewHash(transaction)){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    /**
+     * 区块中校验新产生的哈希
+     */
+    private boolean checkTransactionNewHash(Transaction transaction) {
+        //校验哈希作为主键的正确性
+        //校验交易Hash是否已经被使用了
+        String transactionHash = transaction.getTransactionHash();
+        if(isHashUsed(transactionHash)){
+            LogUtil.debug("交易数据异常，交易Hash已经被使用了。");
+            return false;
+        }
+        return true;
+    }
+    /**
+     * 哈希是否已经被区块链系统使用了？
+     */
+    private boolean isHashUsed(String hash){
+        byte[] bytesHash = KvDbUtil.get(getBlockchainDatabasePath(), BlockchainDatabaseKeyTool.buildHashKey(hash));
+        return bytesHash != null;
+    }
+    //endregion
+
+    //region 新产生的地址相关
+    /**
+     * 校验区块新产生的地址
+     */
+    private boolean checkBlockNewAddress(Block block) {
+        //校验地址作为主键的正确性
+        //新产生的地址不能有重复
+        if(BlockTool.isExistDuplicateNewAddress(block)){
+            LogUtil.debug("区块数据异常，区块中新产生的地址有重复。");
+            return false;
+        }
+        List<Transaction> transactions = block.getTransactions();
+        if(transactions != null){
+            for(Transaction transaction:transactions){
+                if(!checkTransactionNewAddress(transaction)){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    /**
+     * 区块中校验新产生的哈希
+     */
+    private boolean checkTransactionNewAddress(Transaction transaction) {
+        //区块新产生的地址不能有重复
+        if(TransactionTool.isExistDuplicateNewAddress(transaction)){
+            return false;
+        }
+        //区块新产生的地址不能被使用过了
+        List<TransactionOutput> outputs = transaction.getOutputs();
+        if(outputs != null){
+            for (TransactionOutput output:outputs){
+                String address = output.getAddress();
+                if(isAddressUsed(address)){
+                    LogUtil.debug("区块数据异常，地址["+address+"]重复。");
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    private boolean isAddressUsed(String address) {
+        byte[] bytesAddress = KvDbUtil.get(getBlockchainDatabasePath(), BlockchainDatabaseKeyTool.buildAddressKey(address));
+        return bytesAddress != null;
+    }
+    //endregion
+
+
+    //region 双花攻击
+    /**
+     * 校验双花
+     * 双花指的是同一笔UTXO被花费两次或多次。
+     */
+    private boolean checkBlockDoubleSpend(Block block) {
+        //双花交易：区块内部存在重复的[未花费交易输出]
+        if(BlockTool.isExistDuplicateUtxo(block)){
+            LogUtil.debug("区块数据异常：发生双花交易。");
+            return false;
+        }
+        List<Transaction> transactions = block.getTransactions();
+        if(transactions != null){
+            for(Transaction transaction:transactions){
+                if(!checkTransactionDoubleSpend(transaction)){
+                    LogUtil.debug("区块数据异常：发生双花交易。");
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    /**
+     * 校验双花
+     */
+    private boolean checkTransactionDoubleSpend(Transaction transaction) {
+        //双花交易：交易内部存在重复的[未花费交易输出]
+        if(TransactionTool.isExistDuplicateUtxo(transaction)){
+            LogUtil.debug("交易数据异常，检测到双花攻击。");
+            return false;
+        }
+        //双花交易：交易内部使用了[已经花费的[未花费交易输出]]
+        if(!checkStxoIsUtxo(transaction)){
+            LogUtil.debug("交易数据异常：发生双花交易。");
+            return false;
+        }
+        return true;
+    }
     /**
      * 检查[花费的交易输出]是否都是[未花费的交易输出]
      */
@@ -819,167 +962,39 @@ public class BlockchainDatabaseDefaultImpl extends BlockchainDatabase {
         }
         return true;
     }
-
-    private String getBlockchainDatabasePath(){
-        return FileUtil.newPath(coreConfiguration.getCorePath(), BLOCKCHAIN_DATABASE_NAME);
-    }
-
-    //region 新产生的哈希相关
-    /**
-     * 哈希是否已经被区块链系统使用了？
-     */
-    private boolean isHashUsed(String hash){
-        byte[] bytesHash = KvDbUtil.get(getBlockchainDatabasePath(), BlockchainDatabaseKeyTool.buildHashKey(hash));
-        return bytesHash != null;
-    }
-    /**
-     * 交易中新产生的哈希是否已经被区块链系统使用了？
-     */
-    private boolean isNewHashUsed(Transaction transaction) {
-        //校验交易Hash是否已经被使用了
-        String transactionHash = transaction.getTransactionHash();
-        if(isHashUsed(transactionHash)){
-            LogUtil.debug("交易数据异常，交易Hash已经被使用了。");
-            return true;
-        }
-        return false;
-    }
-    /**
-     * 区块中新产生的哈希是否已经被区块链系统使用了？
-     */
-    private boolean isHashUsed(Block block) {
-        //校验区块Hash是否已经被使用了
-        String blockHash = block.getHash();
-        if(isHashUsed(blockHash)){
-            LogUtil.debug("区块数据异常，区块Hash已经被使用了。");
-            return true;
-        }
-        //校验每一笔交易新产生的Hash是否正确
-        List<Transaction> blockTransactions = block.getTransactions();
-        if(blockTransactions != null){
-            for(Transaction transaction:blockTransactions){
-                if(isNewHashUsed(transaction)){
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    /**
-     * 区块中校验新产生的哈希
-     */
-    private boolean checkNewHash(Transaction transaction) {
-        //校验哈希作为主键的正确性
-        //新产生的Hash不能被使用过
-        if(isNewHashUsed(transaction)){
-            LogUtil.debug("校验数据异常，校验中占用的部分主键已经被使用了。");
-            return false;
-        }
-        return true;
-    }
-    /**
-     * 校验区块新产生的哈希
-     */
-    private boolean checkNewHash(Block block) {
-        //校验哈希作为主键的正确性
-        //新产生的哈希不能有重复
-        if(BlockTool.isExistDuplicateNewHash(block)){
-            LogUtil.debug("区块数据异常，区块中新产生的哈希有重复。");
-            return false;
-        }
-        //新产生的哈希不能被区块链使用过了
-        if(isHashUsed(block)){
-            LogUtil.debug("区块数据异常，区块中新产生的哈希已经早被区块链使用了。");
-            return false;
-        }
-        return true;
-    }
-    /**
-     * 校验区块新产生的地址
-     */
-    private boolean checkNewAddress(Block block) {
-        //校验地址作为主键的正确性
-        //新产生的地址不能有重复
-        if(BlockTool.isExistDuplicateNewAddress(block)){
-            LogUtil.debug("区块数据异常，区块中新产生的地址有重复。");
-            return false;
-        }
-        List<Transaction> transactions = block.getTransactions();
-        if(transactions != null){
-            for(Transaction transaction:transactions){
-                if(!checkNewAddress(transaction)){
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    /**
-     * 区块中校验新产生的哈希
-     */
-    private boolean checkNewAddress(Transaction transaction) {
-        //区块新产生的地址不能有重复
-        if(TransactionTool.isExistDuplicateNewAddress(transaction)){
-            return false;
-        }
-        //区块新产生的地址不能被使用过了
-        List<TransactionOutput> outputs = transaction.getOutputs();
-        if(outputs != null){
-            for (TransactionOutput output:outputs){
-                String address = output.getAddress();
-                if(isAddressUsed(address)){
-                    LogUtil.debug(String.format("区块数据异常，地址[%s]重复。",address));
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    private boolean isAddressUsed(String address) {
-        byte[] bytesAddress = KvDbUtil.get(getBlockchainDatabasePath(), BlockchainDatabaseKeyTool.buildAddressKey(address));
-        return bytesAddress != null;
-    }
     //endregion
 
 
-    //region 双花攻击
     /**
-     * 校验双花
+     * 检验交易脚本，即校验交易输入能解锁交易输出吗？即用户花费的是自己的钱吗？
+     * 校验用户花费的是自己的钱吗，用户只可以花费自己的钱。专业点的说法，校验UTXO所有权，用户只可以花费自己拥有的UTXO。
+     * 用户如何能证明自己拥有这个UTXO，只要用户能创建出一个能解锁(该UTXO对应的交易输出脚本)的交易输入脚本，就证明了用户拥有该UTXO。
+     * 这是因为锁(交易输出脚本)是用户创建的，自然只有该用户有对应的钥匙(交易输入脚本)，自然意味着有钥匙的用户拥有这把锁的所有权。
      */
-    private boolean checkDoubleSpend(Transaction transaction) {
-        //双花交易：交易内部存在重复的[未花费交易输出]
-        if(TransactionTool.isExistDuplicateUtxo(transaction)){
-            LogUtil.debug("交易数据异常，检测到双花攻击。");
-            return false;
-        }
-        //双花交易：交易内部使用了[已经花费的[未花费交易输出]]
-        if(!checkStxoIsUtxo(transaction)){
-            LogUtil.debug("交易数据异常：发生双花交易。");
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 校验双花
-     * 双花指的是同一笔UTXO被花费两次或多次。
-     */
-    private boolean checkDoubleSpend(Block block) {
-        //双花交易：区块内部存在重复的[未花费交易输出]
-        if(BlockTool.isExistDuplicateUtxo(block)){
-            LogUtil.debug("区块数据异常：发生双花交易。");
-            return false;
-        }
-        List<Transaction> transactions = block.getTransactions();
-        if(transactions != null){
-            for(Transaction transaction:transactions){
-                if(!checkDoubleSpend(transaction)){
-                    LogUtil.debug("区块数据异常：发生双花交易。");
-                    return false;
+    public boolean checkTransactionScript(Transaction transaction){
+        try{
+            List<TransactionInput> inputs = transaction.getInputs();
+            if(inputs != null && inputs.size()!=0){
+                for(TransactionInput transactionInput:inputs){
+                    //锁(交易输出脚本)
+                    OutputScript outputScript = transactionInput.getUnspentTransactionOutput().getOutputScript();
+                    //钥匙(交易输入脚本)
+                    InputScript inputScript = transactionInput.getInputScript();
+                    //完整脚本
+                    Script script = ScriptTool.createScript(inputScript,outputScript);
+                    //执行脚本
+                    ScriptExecuteResult scriptExecuteResult = virtualMachine.executeScript(transaction,script);
+                    //脚本执行结果是个栈，如果栈有且只有一个元素，且这个元素是0x01，则解锁成功。
+                    boolean executeSuccess = scriptExecuteResult.size()==1 && ByteUtil.isEquals(BooleanCodeEnum.TRUE.getCode(),ByteUtil.hexStringToBytes(scriptExecuteResult.pop()));
+                    if(!executeSuccess){
+                        return false;
+                    }
                 }
             }
+        }catch (Exception e){
+            LogUtil.error("交易校验失败：交易[输入脚本]解锁交易[输出脚本]异常。",e);
+            return false;
         }
         return true;
     }
-    //endregion
 }

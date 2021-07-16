@@ -7,7 +7,8 @@ import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionOu
 import com.xingkaichun.helloworldblockchain.core.model.transaction.TransactionType;
 import com.xingkaichun.helloworldblockchain.crypto.AccountUtil;
 import com.xingkaichun.helloworldblockchain.netcore.dto.TransactionDto;
-import com.xingkaichun.helloworldblockchain.util.ListUtil;
+import com.xingkaichun.helloworldblockchain.setting.TransactionSettingTool;
+import com.xingkaichun.helloworldblockchain.util.DataStructureUtil;
 import com.xingkaichun.helloworldblockchain.util.LogUtil;
 
 import java.util.ArrayList;
@@ -111,7 +112,7 @@ public class TransactionTool {
         if(inputs != null){
             //校验交易输入的金额
             for(TransactionInput input:inputs){
-                if(!checkTransactionValue(input.getUnspentTransactionOutput().getValue())){
+                if(!TransactionSettingTool.checkTransactionValue(input.getUnspentTransactionOutput().getValue())){
                     LogUtil.debug("交易金额不合法");
                     return false;
                 }
@@ -122,7 +123,7 @@ public class TransactionTool {
         if(outputs != null){
             //校验交易输出的金额
             for(TransactionOutput output:outputs){
-                if(!checkTransactionValue(output.getValue())){
+                if(!TransactionSettingTool.checkTransactionValue(output.getValue())){
                     LogUtil.debug("交易金额不合法");
                     return false;
                 }
@@ -134,8 +135,8 @@ public class TransactionTool {
             //没有需要校验的，跳过。
         } else if(transaction.getTransactionType() == TransactionType.STANDARD_TRANSACTION){
             //交易输入必须要大于等于交易输出
-            long inputsValue = TransactionTool.getInputValue(transaction);
-            long outputsValue = TransactionTool.getOutputValue(transaction);
+            long inputsValue = getInputValue(transaction);
+            long outputsValue = getOutputValue(transaction);
             if(inputsValue < outputsValue) {
                 LogUtil.debug("交易校验失败：交易的输入必须大于等于交易的输出。不合法的交易。");
                 return false;
@@ -165,53 +166,33 @@ public class TransactionTool {
     }
 
     /**
-     * 校验交易金额是否是一个合法的交易金额：这里用于限制交易金额的最大值、最小值、小数保留位等
-     */
-    public static boolean checkTransactionValue(long transactionAmount) {
-        try {
-            //交易金额不能小于等于0
-            if(transactionAmount <= 0){
-                LogUtil.debug("交易金额不合法：交易金额不能小于等于0");
-                return false;
-            }
-            //交易金额最小值不需要校验，假设值不正确，业务逻辑通过不了。
-
-            //交易金额最大值不需要校验，假设值不正确，业务逻辑通过不了
-            return true;
-        } catch (Exception e) {
-            LogUtil.error("校验金额方法出现异常，请检查。",e);
-            return false;
-        }
-    }
-
-    /**
      * 交易中是否存在重复的[未花费交易输出]
      */
     public static boolean isExistDuplicateUtxo(Transaction transaction) {
-        List<String> utxoIdList = new ArrayList<>();
+        List<String> utxoIds = new ArrayList<>();
         List<TransactionInput> inputs = transaction.getInputs();
         if(inputs != null){
             for(TransactionInput transactionInput : inputs) {
                 TransactionOutput unspentTransactionOutput = transactionInput.getUnspentTransactionOutput();
                 String utxoId = getTransactionOutputId(unspentTransactionOutput);
-                utxoIdList.add(utxoId);
+                utxoIds.add(utxoId);
             }
         }
-        return ListUtil.isExistDuplicateElement(utxoIdList);
+        return DataStructureUtil.isExistDuplicateElement(utxoIds);
     }
     /**
      * 区块新产生的地址是否存在重复
      */
     public static boolean isExistDuplicateNewAddress(Transaction transaction) {
-        List<String> newAddressList = new ArrayList<>();
+        List<String> newAddresss = new ArrayList<>();
         List<TransactionOutput> outputs = transaction.getOutputs();
         if(outputs != null){
             for (TransactionOutput output:outputs){
                 String address = output.getAddress();
-                newAddressList.add(address);
+                newAddresss.add(address);
             }
         }
-        return ListUtil.isExistDuplicateElement(newAddressList);
+        return DataStructureUtil.isExistDuplicateElement(newAddresss);
     }
 
     public static long getTransactionInputCount(Transaction transaction) {
